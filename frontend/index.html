@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Coach AI — Exercise Form & Posture Analyzer</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="noise"></div>
+  
+  <header>
+    <a href="/" class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="5" r="3"/>
+          <path d="M6 22l4-8 2 2 4-5"/>
+          <path d="M12 10v4"/>
+        </svg>
+      </div>
+      <span>Form Coach <span>AI</span></span>
+    </a>
+    
+    <div class="header-right">
+      <div id="healthBadge" class="live-pill">
+        <i class="dot"></i> <span id="healthStatus">Checking service...</span>
+      </div>
+      <nav>
+        <a href="/docs" target="_blank">API Docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Banner -->
+    <section class="hero">
+      <div class="hero-content">
+        <div class="overline">POWERED BY OPENCV & YOLO POSE</div>
+        <h1>AI Exercise Form <em>& Posture Coach</em></h1>
+        <p class="hero-copy">
+          Capture a photo directly using your camera or upload an image to receive instant biomechanical feedback, joint angle analysis, and pose overlay.
+        </p>
+      </div>
+      
+      <div class="hero-stats card-glass">
+        <div class="stat-item">
+          <span class="stat-num">17</span>
+          <span class="stat-desc">COCO Keypoints</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">3D</span>
+          <span class="stat-desc">Joint Metrics</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">Real-Time</span>
+          <span class="stat-desc">Form Feedback</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Workspace -->
+    <section class="workspace card-glass">
+      <!-- Input Mode Selector Header -->
+      <div class="input-tabs">
+        <button id="tabCamera" class="tab-btn active" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Take Photo (Camera)
+        </button>
+        <button id="tabUpload" class="tab-btn" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Image
+        </button>
+      </div>
+
+      <!-- Mode 1: Camera Interface -->
+      <div id="cameraView" class="input-panel active">
+        <div class="camera-container">
+          <video id="webcamVideo" autoplay playsinline muted></video>
+          <div id="cameraGuide" class="camera-guide">
+            <div class="guide-box">
+              <span class="guide-text">Position full body inside frame</span>
+            </div>
+          </div>
+          <div id="countdownOverlay" class="countdown-overlay" hidden>3</div>
+          <div id="cameraError" class="camera-error" hidden>
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p id="cameraErrMsg">Camera access unavailable.</p>
+            <button id="retryCameraBtn" class="btn-secondary" type="button">Retry Camera</button>
+          </div>
+        </div>
+
+        <div class="camera-controls">
+          <button id="toggleTimerBtn" class="btn-chip" type="button" title="Toggle 3s Self Timer">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span id="timerStatus">Timer: 3s</span>
+          </button>
+          
+          <button id="shutterBtn" class="shutter-btn" type="button" title="Take Snapshot">
+            <span class="shutter-inner"></span>
+          </button>
+          
+          <button id="switchCamBtn" class="btn-chip" type="button" title="Switch Camera" hidden>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Flip
+          </button>
+        </div>
+      </div>
+
+      <!-- Mode 2: File Upload Interface -->
+      <div id="uploadView" class="input-panel">
+        <div id="dropZone" class="dropzone">
+          <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+          <div class="dropzone-content">
+            <div class="upload-icon-ring">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <h3>Drag and drop your pose image here</h3>
+            <p>Supports JPEG, PNG, WEBP (Max 10 MB)</p>
+            <button id="browseBtn" class="btn-secondary" type="button">Browse Files</button>
+          </div>
+        </div>
+
+        <!-- Sample Images Bar -->
+        <div class="sample-section">
+          <span class="sample-label">Or try a sample image:</span>
+          <div class="sample-chips">
+            <button class="sample-chip" data-src="/squat.webp" type="button">🏋️ Squat Sample</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Selection & Settings Bar -->
+      <div class="action-bar">
+        <div id="selectedInfo" class="selected-info" hidden>
+          <div class="thumb-wrapper">
+            <img id="selectedThumb" alt="Selected photo thumbnail">
+          </div>
+          <div class="selected-details">
+            <strong id="selectedName">photo.jpg</strong>
+            <span id="selectedMeta">0.0 MB</span>
+          </div>
+          <button id="removeSelectedBtn" class="btn-icon" type="button" title="Remove selection">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="confidence-control">
+          <div class="confidence-label-row">
+            <label for="confidence">Detection Confidence</label>
+            <span id="confidenceValue" class="mono-badge">0.35 — Balanced</span>
+          </div>
+          <input id="confidence" class="slider" type="range" min="0.1" max="0.9" step="0.05" value="0.35">
+        </div>
+
+        <button id="analyseButton" class="btn-primary" type="button" disabled>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Analyze Form</span>
+        </button>
+      </div>
+
+      <!-- State Displays -->
+      <!-- Loading State -->
+      <div id="loadingState" class="state-card" hidden>
+        <div class="scanner-box">
+          <div class="scanner-line"></div>
+          <div class="spinner-ring"></div>
+        </div>
+        <h3>Analyzing Pose & Biomechanics</h3>
+        <p>Running YOLO pose estimation, calculating joint vectors & squat angles...</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="errorState" class="state-card state-error" hidden>
+        <div class="error-icon">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h3 id="errorHeading">Analysis Couldn't Complete</h3>
+        <p id="errorText" class="error-msg">Please upload a clearer image.</p>
+        <button id="tryAgainBtn" class="btn-secondary" type="button">Try Again</button>
+      </div>
+
+      <!-- Results Dashboard Report -->
+      <div id="report" class="report-section" hidden>
+        <div class="report-header">
+          <div>
+            <div class="overline">ANALYSIS COMPLETE</div>
+            <h2>Biomechanical Form Report</h2>
+          </div>
+          <div class="report-actions">
+            <button id="downloadAnnotatedBtn" class="btn-chip" type="button" title="Download Pose Image">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Save Pose Photo
+            </button>
+          </div>
+        </div>
+
+        <div class="report-grid">
+          <!-- Canvas Overlay Column -->
+          <div class="viewport-card">
+            <div class="canvas-wrapper">
+              <img id="preview" class="preview-img" alt="Captured pose source">
+              <canvas id="poseCanvas"></canvas>
+            </div>
+            
+            <div class="canvas-toolbar">
+              <label class="toggle-control">
+                <input id="toggleSkeleton" type="checkbox" checked>
+                <span>Skeleton Lines</span>
+              </label>
+              <label class="toggle-control">
+                <input id="toggleJoints" type="checkbox" checked>
+                <span>Joint Points</span>
+              </label>
+              <label class="toggle-control">
+                <input id="toggleLabels" type="checkbox" checked>
+                <span>Angles</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Form Metrics Column -->
+          <div class="metrics-column">
+            <!-- Score & Depth Banner -->
+            <div class="score-card">
+              <div class="score-ring-container">
+                <svg class="score-ring-svg" viewBox="0 0 100 100">
+                  <circle class="score-ring-bg" cx="50" cy="50" r="42"/>
+                  <circle id="scoreRingProgress" class="score-ring-fill" cx="50" cy="50" r="42"/>
+                </svg>
+                <div class="score-value-box">
+                  <span id="scoreValue" class="score-num">--</span>
+                  <span class="score-label">SCORE</span>
+                </div>
+              </div>
+
+              <div class="depth-badge-box">
+                <div class="badge-label">Squat Depth</div>
+                <div id="depthChip" class="chip-depth unknown">UNKNOWN</div>
+                <div id="exerciseBadge" class="chip-exercise">Exercise: Pose</div>
+              </div>
+            </div>
+
+            <!-- Joint Metrics Grid -->
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <span class="metric-title">LEFT KNEE ANGLE</span>
+                <strong id="leftAngle" class="metric-value">--°</strong>
+                <span class="metric-sub">Optimal: 80°-100°</span>
+              </div>
+              
+              <div class="metric-card">
+                <span class="metric-title">RIGHT KNEE ANGLE</span>
+                <strong id="rightAngle" class="metric-value">--°</strong>
+                <span class="metric-sub">Optimal: 80°-100°</span>
+              </div>
+
+              <div class="metric-card">
+                <span class="metric-title">KNEE IMBALANCE</span>
+                <strong id="kneeDiff" class="metric-value">--°</strong>
+                <span id="kneeDiffSub" class="metric-sub">Side-to-side diff</span>
+              </div>
+
+              <div class="metric-card">
+                <span class="metric-title">TORSO LEAN</span>
+                <strong id="torsoLean" class="metric-value">--°</strong>
+                <span id="torsoLeanSub" class="metric-sub">From vertical</span>
+              </div>
+
+              <div class="metric-card">
+                <span class="metric-title">KNEE TRACKING</span>
+                <strong id="kneeTracking" class="metric-value">--</strong>
+                <span class="metric-sub">Toe alignment</span>
+              </div>
+
+              <div class="metric-card">
+                <span class="metric-title">DETECTION CONF.</span>
+                <strong id="poseConfidence" class="metric-value">--%</strong>
+                <span id="keypointsCount" class="metric-sub">17 keypoints</span>
+              </div>
+            </div>
+
+            <!-- Feedback & Suggestions Box -->
+            <div class="feedback-card">
+              <h4>AI Coaching Notes</h4>
+              <ul id="feedbackList" class="feedback-list">
+                <li>No feedback available.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Form Coach AI — OpenCV & YOLO Biomechanics Engine</p>
+  </footer>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
