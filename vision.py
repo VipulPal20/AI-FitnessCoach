@@ -71,7 +71,7 @@ class PoseAnalyzer:
         try:
             from ultralytics import YOLO
         except ImportError as error:
-            raise RuntimeError("The pose runtime is not installed. Run: pip install -r requirements.txt") from error
+            raise RuntimeError(f"The pose runtime import error: {error}. Run: pip install -r requirements.txt") from error
         self.device = resolve_yolo_device()
         self.model = YOLO(str(self.model_path))
         self.is_exercise_pose_model = self.model_path == exercise_model_path
@@ -136,37 +136,95 @@ class PoseAnalyzer:
         self, points: np.ndarray, point_confidences: np.ndarray, detection_confidence: float,
         landmarks: dict[str, dict[str, float]], exercise_label: str | None = None,
     ) -> dict[str, Any]:
-        knee_angles: dict[str, float] = {}
-        feedback: list[str] = []
-        for side, hip_index, knee_index, ankle_index in (("left", 11, 13, 15), ("right", 12, 14, 16)):
-            if min(point_confidences[hip_index], point_confidences[knee_index], point_confidences[ankle_index]) >= KEYPOINT_CONFIDENCE:
-                knee_angles[side] = round(calculate_angle(points[hip_index], points[knee_index], points[ankle_index]), 1)
-
-        if not knee_angles:
-            feedback.append("Keep your hips, knees, and ankles visible for squat-depth feedback.")
-            depth = "unknown"
-        else:
-            average_angle = sum(knee_angles.values()) / len(knee_angles)
-            if average_angle <= 100:
-                depth = "deep"
-                feedback.append("Good squat depth detected.")
-            elif average_angle <= 135:
-                depth = "parallel"
-                feedback.append("You are approaching parallel; lower slightly for a deeper squat if comfortable.")
-            else:
-                depth = "shallow"
-                feedback.append("Squat appears shallow; bend your knees and sit back further if appropriate.")
-
         posture = self._posture_metrics(points, point_confidences)
         exercise = self._classify_exercise(points, point_confidences)
-        if exercise_label:
+        
+        # Decide the final exercise label
+        final_label = None
+        angle_label = exercise["label"] if (exercise and exercise.get("reliable")) else None
+        angle_conf = exercise["confidence"] if exercise else 0.0
+
+        # If the angle classifier is confident in a class that YOLO cannot predict, trust it.
+        if angle_label in ("Push Ups", "Jumping Jacks", "Pull ups", "Russian twists") and angle_conf >= 0.70:
+            final_label = angle_label
+        # Otherwise, if YOLO predicted a label, trust YOLO.
+        elif exercise_label:
+            final_label = exercise_label
             exercise = {
                 "label": exercise_label,
                 "confidence": round(detection_confidence, 3),
                 "reliable": detection_confidence >= 0.55,
                 "source": "fine_tuned_yolo_pose",
             }
-        feedback.extend(self._posture_feedback(posture))
+        else:
+            final_label = angle_label
+
+        label_lower = final_label.lower() if final_label else "unknown"
+
+        knee_angles: dict[str, float] = {}
+        elbow_angles: dict[str, float] = {}
+        for side, hip_index, knee_index, ankle_index in (("left", 11, 13, 15), ("right", 12, 14, 16)):
+            if min(point_confidences[hip_index], point_confidences[knee_index], point_confidences[ankle_index]) >= KEYPOINT_CONFIDENCE:
+                knee_angles[side] = round(calculate_angle(points[hip_index], points[knee_index], points[ankle_index]), 1)
+
+        feedback: list[str] = []
+        if "push up" in label_lower or "pushups" in label_lower:
+            for side, shoulder_idx, elbow_idx, wrist_idx in (("left", 5, 7, 9), ("right", 6, 8, 10)):
+                if min(point_confidences[shoulder_idx], point_confidences[elbow_idx], point_confidences[wrist_idx]) >= KEYPOINT_CONFIDENCE:
+                    elbow_angles[side] = round(calculate_angle(points[shoulder_idx], points[elbow_idx], points[wrist_idx]), 1)
+            
+            if not elbow_angles:
+                feedback.append("Keep your shoulders, elbows, and wrists visible for pushup-depth feedback.")
+                depth = "unknown"
+            else:
+                average_elbow = sum(elbow_angles.values()) / len(elbow_angles)
+                if average_elbow <= 100:
+                    depth = "deep"
+                    feedback.append("Excellent pushup depth (elbow bend under 100°).")
+                elif average_elbow <= 135:
+                    depth = "parallel"
+                    feedback.append("Good pushup depth; try to go slightly lower for full range of motion.")
+                else:
+                    depth = "shallow"
+                    feedback.append("Pushup is shallow; try bending your elbows more to lower your chest.")
+
+            hip_angles: dict[str, float] = {}
+            for side, shoulder_idx, hip_idx, knee_idx in (("left", 5, 11, 13), ("right", 6, 12, 14)):
+                if min(point_confidences[shoulder_idx], point_confidences[hip_idx], point_confidences[knee_idx]) >= KEYPOINT_CONFIDENCE:
+                    hip_angles[side] = calculate_angle(points[shoulder_idx], points[hip_idx], points[knee_idx])
+            if hip_angles:
+                avg_hip = sum(hip_angles.values()) / len(hip_angles)
+                if avg_hip < 160:
+                    feedback.append("Keep your torso and hips aligned; brace your core to prevent sagging.")
+        elif "jumping jacks" in label_lower:
+            depth = "unknown"
+            feedback.append("Jumping jacks detected. Ensure you raise your arms fully above your head.")
+        elif "pull ups" in label_lower:
+            depth = "unknown"
+            feedback.append("Pull-ups detected. Pull until your chin clears the bar, keeping your core stable.")
+        elif "deadlift" in label_lower:
+            depth = "unknown"
+            feedback.append("Deadlift detected. Focus on driving through your heels and keeping a flat back.")
+        elif "lateral_raise" in label_lower or "lateral raise" in label_lower:
+            depth = "unknown"
+            feedback.append("Lateral raises detected. Lift weight to shoulder height; keep elbows slightly bent.")
+        else: # Default is Squat analysis
+            if not knee_angles:
+                feedback.append("Keep your hips, knees, and ankles visible for squat-depth feedback.")
+                depth = "unknown"
+            else:
+                average_angle = sum(knee_angles.values()) / len(knee_angles)
+                if average_angle <= 100:
+                    depth = "deep"
+                    feedback.append("Good squat depth detected.")
+                elif average_angle <= 135:
+                    depth = "parallel"
+                    feedback.append("You are approaching parallel; lower slightly for a deeper squat if comfortable.")
+                else:
+                    depth = "shallow"
+                    feedback.append("Squat appears shallow; bend your knees and sit back further if appropriate.")
+            feedback.extend(self._posture_feedback(posture))
+
         visible_keypoints = int(np.count_nonzero(point_confidences >= KEYPOINT_CONFIDENCE))
         if visible_keypoints < 11:
             feedback.append("For a more reliable assessment, use a clear, full-body side or front view.")
@@ -176,6 +234,7 @@ class PoseAnalyzer:
             "landmarks": landmarks,
             "metrics": {
                 "knee_angles": knee_angles,
+                "elbow_angles": elbow_angles,
                 "squat_depth": depth,
                 "posture": posture,
                 "visible_keypoints": visible_keypoints,

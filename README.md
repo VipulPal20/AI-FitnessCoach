@@ -1,54 +1,128 @@
-# Form Coach Vision API
+# 🏋️ AI Personal Fitness Trainer & Exercise Recognition Engine
 
-FastAPI backend that detects a person's pose in an uploaded image and produces practical squat-form feedback.
+An AI-powered computer vision application for real-time exercise classification, pose estimation, joint kinematic analysis, and repetition counting. Built with **FastAPI**, **MediaPipe Pose**, **TensorFlow / Keras Attention-LSTM**, and **OpenCV**, featuring an interactive web dashboard.
 
-The bundled YOLOv8 pose model runs locally. When `exercise_pose_best.pt` exists, the app automatically uses the fine-tuned exercise-pose model to detect `deadlift`, `lateral_raise`, and `squat`; otherwise it falls back to the general pose model. The app automatically keeps Ultralytics and Matplotlib cache files in the project, so it also starts on managed machines where the normal user-profile cache directories are not writable.
+---
 
-## Run locally
+## ✨ Key Features
+
+- 🏋️ **Real-Time Exercise Recognition**: Detects **Bicep Curls**, **Overhead Press**, and **Squats** using a 30-frame sequence window.
+- 🧠 **Bidirectional Attention-LSTM Model**: Custom deep neural network leveraging spatial-temporal attention on 33 MediaPipe 3D pose keypoints.
+- 🔢 **Automated Repetition Counter**: State machine heuristics (`UP` / `DOWN` stages) for accurate rep tracking.
+- 📐 **Kinematic Joint Angle & Form Analysis**: Calculates elbow flex, shoulder extension, knee angles, and posture in real time.
+- 💻 **Interactive Web Dashboard**: Modern responsive web interface with live webcam feed, video upload, sample video playback, skeletal overlay canvas, and real-time stats.
+- ⚙️ **Configurable AI Parameters**: Tune detection confidence, tracking confidence, and classification thresholds on the fly.
+- ⚡ **RESTful API**: Standardized FastAPI endpoints for frame processing, stats, counter resets, and system health checks.
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐       ┌──────────────────────┐       ┌────────────────────────┐
+│  Camera / Video │ ────> │ MediaPipe Pose Task  │ ────> │ 33 3D Pose Keypoints   │
+└─────────────────┘       └──────────────────────┘       └───────────┬────────────┘
+                                                                     │ (Sequence = 30)
+                                                                     ▼
+┌─────────────────┐       ┌──────────────────────┐       ┌────────────────────────┐
+│ Interactive UI  │ <──── │ Rep Counter Engine   │ <──── │ Attention-LSTM Model   │
+└─────────────────┘       └──────────────────────┘       └────────────────────────┘
+```
+
+---
+
+## 📁 Repository Structure
+
+```
+opencv_project/
+├── app.py                         # FastAPI server & REST API endpoints
+├── exercise_engine.py             # Core AI engine (MediaPipe, Attention-LSTM, Rep Counter)
+├── requirements.txt               # Python package dependencies
+├── models/
+│   ├── pose_landmarker.task       # MediaPipe Pose Landmarker task binary
+│   ├── LSTM_Attention.h5          # Trained Attention-LSTM neural network weights
+│   └── LSTM.h5                    # Baseline LSTM model weights
+├── frontend/                      # Web Application
+│   ├── index.html                 # Dashboard layout
+│   ├── styles.css                 # Custom CSS styling
+│   ├── app.js                     # Frontend video processing, API client & skeletal overlay
+│   └── assets/ & samples/         # Static visual assets & sample exercise videos
+├── vision.py                      # Computer vision helpers & YOLO fallbacks
+├── train_exercise_classifier.py   # Exercise classifier training script
+├── train_exercise_yolo.py         # YOLO exercise-pose training script
+└── README.md                      # Documentation
+```
+
+---
+
+## ⚡ Quick Start
+
+### 1. Prerequisites
+- **Python 3.10+**
+- Webcam (optional, for live web streaming)
+
+### 2. Installation
+
+Clone or open the project directory and create a virtual environment:
 
 ```powershell
+# Create virtual environment
 python -m venv .venv
+
+# Activate on Windows (PowerShell)
 .\.venv\Scripts\Activate.ps1
+
+# Activate on Linux / macOS
+source .venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
-uvicorn app:app --reload
 ```
 
-Open `http://localhost:8000/docs` to try the API.
+### 3. Running the Application
 
-## API
-
-`POST /api/v1/analyze` accepts a multipart `file` (`image/jpeg`, `image/png`, or `image/webp`) and optional `confidence` between `0.1` and `0.9`.
-It returns the strongest detected pose plus squat depth, left/right knee angles, knee-angle symmetry, torso lean, knee-tracking guidance, visible-keypoint count, and actionable feedback. These estimates are coaching aids, not a medical assessment.
-
-The included `exercise_classifier.joblib` is trained from `exercise_angles.csv` to classify Jumping Jacks, Pull ups, Push Ups, Russian twists, and Squats from pose-derived angles. Its prediction appears at `people[0].metrics.exercise` when enough landmarks are visible. Low-confidence predictions are returned as `label: "unknown"`, along with a candidate label, rather than presented as a reliable result. Re-train it after updating the dataset:
+Launch the server using Python:
 
 ```powershell
-python train_exercise_classifier.py
+python app.py
 ```
+
+Or run directly with Uvicorn:
 
 ```powershell
-curl.exe -X POST "http://localhost:8000/api/v1/analyze" -F "file=@squat.webp"
+uvicorn app:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-`GET /api/v1/health` confirms the service and loaded model. The legacy `POST /predict` endpoint remains available.
+Navigate to:
+- 🌐 **Web Dashboard**: [http://localhost:8001/](http://localhost:8001/)
+- 📖 **Interactive Swagger API Docs**: [http://localhost:8001/docs](http://localhost:8001/docs)
 
-## Configuration
+---
 
-- `POSE_MODEL_PATH`: alternate path to a YOLO pose model.
-- `EXERCISE_POSE_MODEL_PATH`: alternate path to the fine-tuned exercise YOLO-pose model.
-- `CORS_ORIGINS`: comma-separated allowed origins. Defaults to `*` for local development.
-- `YOLO_CONFIG_DIR`: optional writable directory for Ultralytics settings. The app defaults to `.ultralytics` in this project.
+## 📡 API Endpoints Summary
 
-## YOLO exercise-pose training
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/v1/health` | Returns server health status, active model info, and supported actions |
+| `POST` | `/api/v1/process_frame` | Processes an uploaded video/image frame, extracts pose keypoints, performs inference, and updates rep state |
+| `GET` | `/api/v1/stats` | Retrieves current exercise state, confidence scores, rep counts, and stages |
+| `POST` | `/api/v1/reset_counters` | Resets rep counters for all exercises back to `0` |
+| `POST` | `/api/v1/settings` | Updates detection confidence, tracking confidence, and classification thresholds |
 
-`archive (3).zip` was normalized into `exercise_pose_dataset` (3,270 training and 1,326 validation images). It contains pose labels for deadlifts, lateral raises, and squats. Run a full fine-tuning job where a GPU is available:
+---
 
-```powershell
-python train_exercise_yolo.py --epochs 20 --imgsz 512 --batch 16
-```
+## 🧠 Neural Network Model Details
 
-## SmartAPI market signals
+- **Input Dimension**: `(Batch, 30 Time Steps, 132 Features)` representing 33 MediaPipe 3D pose keypoints `[x, y, z, visibility]`.
+- **Architecture**:
+  1. `Bidirectional(LSTM(256, return_sequences=True))`
+  2. Custom Softmax Attention Block across time steps
+  3. `Dense(512, activation='relu')` with `Dropout(0.5)`
+  4. `Dense(3, activation='softmax')` output layer
+- **Output Classes**: `bicep_curl`, `overhead_press`, `squat`
 
-The market dashboard is available at `http://localhost:8000/markets.html`. Copy `.env.example` to `.env` and set your Angel One SmartAPI credentials: `SMART_API_KEY`, `SMART_CLIENT_CODE`, `SMART_PIN`, and `SMART_TOTP_SECRET`. Credentials are used only by the server; never add them to browser code or commit `.env`.
+---
 
-The dashboard uses SmartAPI instrument search, live LTP, positions, and recent 5-minute candles to generate an educational technical signal. It does not place orders and is not investment advice.
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for details.

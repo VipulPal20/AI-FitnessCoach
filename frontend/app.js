@@ -1,650 +1,838 @@
 /**
- * Form Coach AI — Main Client Logic
- * Handles camera capture (WebRTC), drag & drop upload, pose overlay rendering,
- * and biomechanical analysis report.
+ * PulseAI — Fitness Vision Trainer Client Application
+ * Real-Time Exercise Recognition, Kinematic Angles & Repetition Counter
+ * Architecture inspired by Chris Prasanna (Exercise_Recognition_AI).
  */
 
-// Global App State
 const state = {
-  activeTab: 'camera',
+  activeMode: 'live',
+  isStreaming: false,
   webcamStream: null,
   facingMode: 'user',
-  timerEnabled: true,
-  countdown: 3,
-  isCapturing: false,
-  selectedFile: null,
-  analysisResult: null,
-  sourceImageElement: null
+  audioEnabled: true,
+  fps: 0,
+  frameCount: 0,
+  lastFpsTime: performance.now(),
+  isProcessingFrame: false,
+  sendIntervalMs: 80,
+  intervalTimer: null,
+  videoPlaybackTimer: null,
+
+  // Workout Session State
+  sessionSeconds: 0,
+  sessionTimerId: null,
+  totalReps: 0,
+  targets: { curl: 12, press: 10, squat: 15 }
 };
 
-// DOM Elements
-const DOM = {
-  // Tabs & Nav
-  healthStatus: document.querySelector('#healthStatus'),
-  healthBadge: document.querySelector('#healthBadge'),
-  tabCamera: document.querySelector('#tabCamera'),
-  tabUpload: document.querySelector('#tabUpload'),
-  cameraView: document.querySelector('#cameraView'),
-  uploadView: document.querySelector('#uploadView'),
-
-  // Camera Elements
-  webcamVideo: document.querySelector('#webcamVideo'),
-  cameraGuide: document.querySelector('#cameraGuide'),
-  countdownOverlay: document.querySelector('#countdownOverlay'),
-  cameraError: document.querySelector('#cameraError'),
-  cameraErrMsg: document.querySelector('#cameraErrMsg'),
-  retryCameraBtn: document.querySelector('#retryCameraBtn'),
-  shutterBtn: document.querySelector('#shutterBtn'),
-  toggleTimerBtn: document.querySelector('#toggleTimerBtn'),
-  timerStatus: document.querySelector('#timerStatus'),
-  switchCamBtn: document.querySelector('#switchCamBtn'),
-
-  // Upload Elements
-  dropZone: document.querySelector('#dropZone'),
-  fileInput: document.querySelector('#fileInput'),
-  browseBtn: document.querySelector('#browseBtn'),
-  sampleChips: document.querySelectorAll('.sample-chip'),
-
-  // Selection & Actions
-  selectedInfo: document.querySelector('#selectedInfo'),
-  selectedThumb: document.querySelector('#selectedThumb'),
-  selectedName: document.querySelector('#selectedName'),
-  selectedMeta: document.querySelector('#selectedMeta'),
-  removeSelectedBtn: document.querySelector('#removeSelectedBtn'),
-  confidence: document.querySelector('#confidence'),
-  confidenceValue: document.querySelector('#confidenceValue'),
-  analyseButton: document.querySelector('#analyseButton'),
-
-  // Display States
-  loadingState: document.querySelector('#loadingState'),
-  errorState: document.querySelector('#errorState'),
-  errorText: document.querySelector('#errorText'),
-  tryAgainBtn: document.querySelector('#tryAgainBtn'),
-  report: document.querySelector('#report'),
-
-  // Report Elements
-  preview: document.querySelector('#preview'),
-  poseCanvas: document.querySelector('#poseCanvas'),
-  scoreValue: document.querySelector('#scoreValue'),
-  scoreRingProgress: document.querySelector('#scoreRingProgress'),
-  depthChip: document.querySelector('#depthChip'),
-  exerciseBadge: document.querySelector('#exerciseBadge'),
-  leftAngle: document.querySelector('#leftAngle'),
-  rightAngle: document.querySelector('#rightAngle'),
-  kneeDiff: document.querySelector('#kneeDiff'),
-  torsoLean: document.querySelector('#torsoLean'),
-  kneeTracking: document.querySelector('#kneeTracking'),
-  poseConfidence: document.querySelector('#poseConfidence'),
-  keypointsCount: document.querySelector('#keypointsCount'),
-  feedbackList: document.querySelector('#feedbackList'),
-  downloadAnnotatedBtn: document.querySelector('#downloadAnnotatedBtn'),
-
-  // Canvas Toggles
-  toggleSkeleton: document.querySelector('#toggleSkeleton'),
-  toggleJoints: document.querySelector('#toggleJoints'),
-  toggleLabels: document.querySelector('#toggleLabels')
-};
-
-// COCO Skeleton Connections (17 keypoints)
-const COCO_PAIRS = [
-  ['left_shoulder', 'right_shoulder'],
-  ['left_shoulder', 'left_elbow'],
-  ['left_elbow', 'left_wrist'],
-  ['right_shoulder', 'right_elbow'],
-  ['right_elbow', 'right_wrist'],
-  ['left_shoulder', 'left_hip'],
-  ['right_shoulder', 'right_hip'],
-  ['left_hip', 'right_hip'],
-  ['left_hip', 'left_knee'],
-  ['left_knee', 'left_ankle'],
-  ['right_hip', 'right_knee'],
-  ['right_knee', 'right_ankle']
+// MediaPipe 33 Keypoint Pose Connections
+const POSE_CONNECTIONS = [
+  [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], // Arms
+  [11, 23], [12, 24], [23, 24],                      // Torso
+  [23, 25], [24, 26], [25, 27], [26, 28],            // Legs
+  [27, 29], [28, 30], [29, 31], [30, 32],            // Feet
+  [15, 17], [15, 19], [15, 21], [16, 18], [16, 20], [16, 22] // Hands
 ];
 
-// Initialize Application
+// DOM Registry
+const DOM = {
+  // Session Stats
+  sessionTimer: document.querySelector('#sessionTimer'),
+  estCalories: document.querySelector('#estCalories'),
+  aiStatusPill: document.querySelector('#aiStatusPill'),
+  aiStatusText: document.querySelector('#aiStatusText'),
+  resetWorkoutBtn: document.querySelector('#resetWorkoutBtn'),
+
+  // Mode Tabs
+  tabLiveMode: document.querySelector('#tabLiveMode'),
+  tabUploadMode: document.querySelector('#tabUploadMode'),
+  liveArena: document.querySelector('#liveArena'),
+  uploadArena: document.querySelector('#uploadArena'),
+
+  // Rep Trackers
+  cardCurl: document.querySelector('#cardCurl'),
+  cardPress: document.querySelector('#cardPress'),
+  cardSquat: document.querySelector('#cardSquat'),
+  curlCount: document.querySelector('#curlCount'),
+  pressCount: document.querySelector('#pressCount'),
+  squatCount: document.querySelector('#squatCount'),
+  curlStageBadge: document.querySelector('#curlStageBadge'),
+  pressStageBadge: document.querySelector('#pressStageBadge'),
+  squatStageBadge: document.querySelector('#squatStageBadge'),
+  curlProgressBar: document.querySelector('#curlProgressBar'),
+  pressProgressBar: document.querySelector('#pressProgressBar'),
+  squatProgressBar: document.querySelector('#squatProgressBar'),
+
+  // Viewport & Overlays
+  webcamVideo: document.querySelector('#webcamVideo'),
+  liveCanvas: document.querySelector('#liveCanvas'),
+  cameraStartPrompt: document.querySelector('#cameraStartPrompt'),
+  startCameraBtn: document.querySelector('#startCameraBtn'),
+  stopCameraBtn: document.querySelector('#stopCameraBtn'),
+  flipCameraBtn: document.querySelector('#flipCameraBtn'),
+  goToUploadBtn: document.querySelector('#goToUploadBtn'),
+  cameraErrorBox: document.querySelector('#cameraErrorBox'),
+  cameraErrorMsg: document.querySelector('#cameraErrorMsg'),
+  retryCamBtn: document.querySelector('#retryCamBtn'),
+  useSampleBtn: document.querySelector('#useSampleBtn'),
+  fpsCounter: document.querySelector('#fpsCounter'),
+  actionBadgeHUD: document.querySelector('#actionBadgeHUD'),
+  actionHUDText: document.querySelector('#actionHUDText'),
+  stageBadgeHUD: document.querySelector('#stageBadgeHUD'),
+  stageHUDText: document.querySelector('#stageHUDText'),
+  repAnimationOverlay: document.querySelector('#repAnimationOverlay'),
+  repPopExercise: document.querySelector('#repPopExercise'),
+
+  // Toggles
+  toggleSkeleton: document.querySelector('#toggleSkeleton'),
+  toggleAngles: document.querySelector('#toggleAngles'),
+  toggleAudio: document.querySelector('#toggleAudio'),
+
+  // Upload Mode
+  uploadDropArea: document.querySelector('#uploadDropArea'),
+  filePicker: document.querySelector('#filePicker'),
+  browseFileBtn: document.querySelector('#browseFileBtn'),
+  uploadResultStage: document.querySelector('#uploadResultStage'),
+  uploadPreviewImage: document.querySelector('#uploadPreviewImage'),
+  uploadPreviewVideo: document.querySelector('#uploadPreviewVideo'),
+  uploadCanvas: document.querySelector('#uploadCanvas'),
+  changeFileBtn: document.querySelector('#changeFileBtn'),
+  sampleSquatBtn: document.querySelector('#sampleSquatBtn'),
+  samplePressBtn: document.querySelector('#samplePressBtn'),
+
+  // Telemetry: Probability Meters
+  probCurlLabel: document.querySelector('#probCurlLabel'),
+  probCurlBar: document.querySelector('#probCurlBar'),
+  probPressLabel: document.querySelector('#probPressLabel'),
+  probPressBar: document.querySelector('#probPressBar'),
+  probSquatLabel: document.querySelector('#probSquatLabel'),
+  probSquatBar: document.querySelector('#probSquatBar'),
+
+  // Telemetry: Kinematic Angles
+  angleLeftElbow: document.querySelector('#angleLeftElbow'),
+  angleRightElbow: document.querySelector('#angleRightElbow'),
+  angleLeftKnee: document.querySelector('#angleLeftKnee'),
+  angleRightKnee: document.querySelector('#angleRightKnee'),
+  angleLeftHip: document.querySelector('#angleLeftHip'),
+  angleRightHip: document.querySelector('#angleRightHip'),
+
+  // AI Coach Note
+  coachNoteText: document.querySelector('#coachNoteText'),
+
+  // Sliders
+  sliderDetect: document.querySelector('#sliderDetect'),
+  valDetectText: document.querySelector('#valDetectText'),
+  sliderTrack: document.querySelector('#sliderTrack'),
+  valTrackText: document.querySelector('#valTrackText'),
+  sliderClassify: document.querySelector('#sliderClassify'),
+  valClassifyText: document.querySelector('#valClassifyText')
+};
+
+// Audio Rep Beep Context
+let audioContext = null;
+
+function playRepChime() {
+  if (!state.audioEnabled) return;
+  try {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+    osc.frequency.exponentialRampToValueAtTime(783.99, audioContext.currentTime + 0.12); // G5
+    gain.gain.setValueAtTime(0.28, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.28);
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.start();
+    osc.stop(audioContext.currentTime + 0.28);
+  } catch (e) {}
+}
+
+// App Initialization
 document.addEventListener('DOMContentLoaded', () => {
-  checkBackendHealth();
-  setupEventListeners();
-  initCamera();
+  verifyHealth();
+  attachEvents();
+  startSessionClock();
 });
 
-// --- Health Check ---
-async function checkBackendHealth() {
-  try {
-    const res = await fetch('/api/v1/health');
-    const data = await res.json();
-    if (res.ok && data.status === 'ok') {
-      DOM.healthStatus.textContent = `Online (${data.model})`;
-      DOM.healthBadge.style.color = 'var(--accent-emerald)';
-    } else {
-      DOM.healthStatus.textContent = `Degraded: ${data.message || 'Model loading...'}`;
-      DOM.healthBadge.style.color = 'var(--accent-amber)';
-    }
-  } catch (err) {
-    DOM.healthStatus.textContent = 'API Offline';
-    DOM.healthBadge.style.color = 'var(--accent-rose)';
-  }
-}
-
-// --- Event Listeners Setup ---
-function setupEventListeners() {
-  // Tab Switching
-  DOM.tabCamera.addEventListener('click', () => switchTab('camera'));
-  DOM.tabUpload.addEventListener('click', () => switchTab('upload'));
-
-  // Camera Controls
-  DOM.shutterBtn.addEventListener('click', handleShutterClick);
-  DOM.toggleTimerBtn.addEventListener('click', toggleTimer);
-  DOM.switchCamBtn.addEventListener('click', switchCamera);
-  DOM.retryCameraBtn.addEventListener('click', initCamera);
-
-  // Upload File Picker
-  DOM.browseBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    DOM.fileInput.click();
-  });
-  DOM.dropZone.addEventListener('click', () => DOM.fileInput.click());
-
-  DOM.fileInput.addEventListener('change', (e) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileSelected(e.target.files[0], 'upload');
-    }
-  });
-
-  // Global & DropZone Drag and Drop Handlers
-  setupDragAndDrop();
-
-  // Sample Images
-  DOM.sampleChips.forEach(chip => {
-    chip.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const src = chip.getAttribute('data-src');
-      try {
-        const res = await fetch(src);
-        const blob = await res.blob();
-        const file = new File([blob], 'sample_squat.webp', { type: blob.type || 'image/webp' });
-        handleFileSelected(file, 'sample');
-      } catch (err) {
-        showError('Unable to load sample image.');
-      }
-    });
-  });
-
-  // Selection & Actions
-  DOM.removeSelectedBtn.addEventListener('click', clearSelection);
-  DOM.confidence.addEventListener('input', updateConfidenceLabel);
-  DOM.analyseButton.addEventListener('click', runFormAnalysis);
-  DOM.tryAgainBtn.addEventListener('click', resetState);
-  DOM.downloadAnnotatedBtn.addEventListener('click', downloadAnnotatedSnapshot);
-
-  // Canvas View Toggles
-  [DOM.toggleSkeleton, DOM.toggleJoints, DOM.toggleLabels].forEach(input => {
-    input.addEventListener('change', () => {
-      if (state.analysisResult && state.sourceImageElement) {
-        renderPoseCanvas(state.sourceImageElement, state.analysisResult.people[0]?.landmarks || {});
-      }
-    });
-  });
-
-  window.addEventListener('resize', () => {
-    if (state.analysisResult && state.sourceImageElement) {
-      renderPoseCanvas(state.sourceImageElement, state.analysisResult.people[0]?.landmarks || {});
-    }
-  });
-}
-
-// --- Bulletproof Drag & Drop Setup ---
-function setupDragAndDrop() {
-  // Prevent browser default behavior (opening image in new tab)
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    window.addEventListener(eventName, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    }, false);
-  });
-
-  // Visual cues for drag hover
-  ['dragenter', 'dragover'].forEach(eventName => {
-    window.addEventListener(eventName, () => {
-      DOM.dropZone.classList.add('dragging');
-    }, false);
-  });
-
-  ['dragleave', 'drop'].forEach(eventName => {
-    window.addEventListener(eventName, () => {
-      DOM.dropZone.classList.remove('dragging');
-    }, false);
-  });
-
-  // Process dropped file
-  window.addEventListener('drop', (e) => {
-    const file = e.dataTransfer?.files?.[0];
-    if (file) {
-      if (state.activeTab !== 'upload') {
-        switchTab('upload');
-      }
-      handleFileSelected(file, 'drag & drop');
-    }
-  }, false);
-}
-
-// --- Tab Controller ---
-function switchTab(tab) {
-  state.activeTab = tab;
-  if (tab === 'camera') {
-    DOM.tabCamera.classList.add('active');
-    DOM.tabUpload.classList.remove('active');
-    DOM.cameraView.classList.add('active');
-    DOM.uploadView.classList.remove('active');
-    initCamera();
-  } else {
-    DOM.tabUpload.classList.add('active');
-    DOM.tabCamera.classList.remove('active');
-    DOM.uploadView.classList.add('active');
-    DOM.cameraView.classList.remove('active');
-    stopCamera();
-  }
-}
-
-// --- WebRTC Camera Controller ---
-async function initCamera() {
-  DOM.cameraError.hidden = true;
-  stopCamera();
-  try {
-    const constraints = {
-      video: {
-        facingMode: state.facingMode,
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      },
-      audio: false
-    };
-    state.webcamStream = await navigator.mediaDevices.getUserMedia(constraints);
-    DOM.webcamVideo.srcObject = state.webcamStream;
-    DOM.cameraGuide.hidden = false;
-
-    // Check multiple devices for camera switcher button
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(d => d.kind === 'videoinput');
-    DOM.switchCamBtn.hidden = videoDevices.length <= 1;
-  } catch (err) {
-    console.error('Camera Access Error:', err);
-    DOM.cameraErrMsg.textContent = 'Camera access denied or unavailable on this device.';
-    DOM.cameraError.hidden = false;
-    DOM.cameraGuide.hidden = true;
-  }
-}
-
-function stopCamera() {
-  if (state.webcamStream) {
-    state.webcamStream.getTracks().forEach(track => track.stop());
-    state.webcamStream = null;
-  }
-  DOM.webcamVideo.srcObject = null;
-}
-
-function switchCamera() {
-  state.facingMode = state.facingMode === 'user' ? 'environment' : 'user';
-  initCamera();
-}
-
-function toggleTimer() {
-  state.timerEnabled = !state.timerEnabled;
-  DOM.timerStatus.textContent = state.timerEnabled ? 'Timer: 3s' : 'Timer: Off';
-  DOM.toggleTimerBtn.style.color = state.timerEnabled ? 'var(--accent-cyan)' : 'var(--text-muted)';
-}
-
-function handleShutterClick() {
-  if (state.isCapturing) return;
-  if (state.timerEnabled) {
-    startCountdown();
-  } else {
-    takeSnapshot();
-  }
-}
-
-function startCountdown() {
-  state.isCapturing = true;
-  let seconds = 3;
-  DOM.countdownOverlay.textContent = seconds;
-  DOM.countdownOverlay.hidden = false;
-
-  const interval = setInterval(() => {
-    seconds--;
-    if (seconds > 0) {
-      DOM.countdownOverlay.textContent = seconds;
-    } else {
-      clearInterval(interval);
-      DOM.countdownOverlay.hidden = true;
-      state.isCapturing = false;
-      takeSnapshot();
+// --- Session Clock & Calories ---
+function startSessionClock() {
+  if (state.sessionTimerId) clearInterval(state.sessionTimerId);
+  state.sessionTimerId = setInterval(() => {
+    if (state.isStreaming) {
+      state.sessionSeconds++;
+      const mins = String(Math.floor(state.sessionSeconds / 60)).padStart(2, '0');
+      const secs = String(state.sessionSeconds % 60).padStart(2, '0');
+      DOM.sessionTimer.textContent = `${mins}:${secs}`;
     }
   }, 1000);
 }
 
-function takeSnapshot() {
-  const video = DOM.webcamVideo;
-  if (!video.videoWidth || !video.videoHeight) return;
-
-  const offscreenCanvas = document.createElement('canvas');
-  offscreenCanvas.width = video.videoWidth;
-  offscreenCanvas.height = video.videoHeight;
-  const ctx = offscreenCanvas.getContext('2d');
-  
-  // If front camera, mirror snapshot to match preview
-  if (state.facingMode === 'user') {
-    ctx.translate(offscreenCanvas.width, 0);
-    ctx.scale(-1, 1);
-  }
-  ctx.drawImage(video, 0, 0);
-
-  offscreenCanvas.toBlob((blob) => {
-    if (!blob) return;
-    const file = new File([blob], `camera_photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
-    handleFileSelected(file, 'camera');
-  }, 'image/jpeg', 0.95);
+function updateEstimatedCalories(counters) {
+  const cals = (counters.curl * 0.32) + (counters.press * 0.42) + (counters.squat * 0.65) + (state.sessionSeconds * 0.05);
+  DOM.estCalories.textContent = `${Math.round(cals)} kcal`;
 }
 
-// --- Selection Handler ---
-function handleFileSelected(file, source) {
-  if (!file || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-    showError('Unsupported file type. Please choose a JPEG, PNG, or WEBP photo.');
-    return;
-  }
-  if (file.size > 10 * 1024 * 1024) {
-    showError('File size exceeds maximum limit of 10 MB.');
-    return;
-  }
-
-  state.selectedFile = file;
-  DOM.selectedName.textContent = file.name;
-  DOM.selectedMeta.textContent = `${(file.size / (1024 * 1024)).toFixed(2)} MB · ${source.toUpperCase()}`;
-
-  const objectUrl = URL.createObjectURL(file);
-  DOM.selectedThumb.src = objectUrl;
-  DOM.selectedInfo.hidden = false;
-  DOM.analyseButton.disabled = false;
-
-  resetState(false);
-}
-
-function clearSelection() {
-  state.selectedFile = null;
-  DOM.fileInput.value = '';
-  DOM.selectedInfo.hidden = true;
-  DOM.analyseButton.disabled = true;
-  resetState(true);
-}
-
-function updateConfidenceLabel() {
-  const v = parseFloat(DOM.confidence.value);
-  const modeText = v < 0.3 ? 'Fast' : v > 0.55 ? 'Precise' : 'Balanced';
-  DOM.confidenceValue.textContent = `${v.toFixed(2)} — ${modeText}`;
-}
-
-function resetState(hideReport = true) {
-  DOM.loadingState.hidden = true;
-  DOM.errorState.hidden = true;
-  if (hideReport) {
-    DOM.report.hidden = true;
+// --- Health Check ---
+async function verifyHealth() {
+  try {
+    const res = await fetch('/api/v1/health');
+    const data = await res.json();
+    if (res.ok && data.status === 'ok') {
+      DOM.aiStatusText.textContent = 'Vision AI Active';
+      DOM.aiStatusPill.style.color = 'var(--accent-emerald)';
+    } else {
+      DOM.aiStatusText.textContent = 'Degraded';
+      DOM.aiStatusPill.style.color = 'var(--accent-amber)';
+    }
+  } catch (e) {
+    DOM.aiStatusText.textContent = 'Offline';
+    DOM.aiStatusPill.style.color = 'var(--accent-rose)';
   }
 }
 
-function showError(msg) {
-  DOM.loadingState.hidden = true;
-  DOM.report.hidden = true;
-  DOM.errorText.textContent = msg;
-  DOM.errorState.hidden = false;
+// --- Event Handlers ---
+function attachEvents() {
+  // Mode Switchers
+  DOM.tabLiveMode.addEventListener('click', () => setMode('live'));
+  DOM.tabUploadMode.addEventListener('click', () => setMode('upload'));
+
+  // Camera Actions
+  DOM.startCameraBtn.addEventListener('click', startWebcam);
+  DOM.retryCamBtn.addEventListener('click', startWebcam);
+  DOM.stopCameraBtn.addEventListener('click', stopWebcam);
+  DOM.flipCameraBtn.addEventListener('click', flipCameraLens);
+  DOM.resetWorkoutBtn.addEventListener('click', resetAllWorkoutStats);
+
+  DOM.goToUploadBtn.addEventListener('click', () => setMode('upload'));
+  DOM.useSampleBtn.addEventListener('click', () => {
+    setMode('upload');
+    loadSample('/samples/sample_squat.webp');
+  });
+
+  // Sample Buttons
+  DOM.sampleSquatBtn.addEventListener('click', () => loadSample('/samples/sample_squat.webp'));
+  DOM.samplePressBtn.addEventListener('click', () => loadSample('/samples/sample_press.jpg'));
+
+  // Audio Toggle
+  DOM.toggleAudio.addEventListener('change', (e) => {
+    state.audioEnabled = e.target.checked;
+  });
+
+  // Slider Updates
+  [DOM.sliderDetect, DOM.sliderTrack, DOM.sliderClassify].forEach(slider => {
+    slider.addEventListener('input', syncSliderSettings);
+  });
+
+  // File Upload
+  DOM.browseFileBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    DOM.filePicker.click();
+  });
+  DOM.changeFileBtn.addEventListener('click', () => {
+    DOM.uploadResultStage.hidden = true;
+    DOM.uploadDropArea.hidden = false;
+    DOM.filePicker.click();
+  });
+  DOM.uploadDropArea.addEventListener('click', () => DOM.filePicker.click());
+  DOM.filePicker.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleUploadedMedia(e.target.files[0]);
+    }
+  });
+
+  bindDragAndDrop();
 }
 
-// --- Form Analysis API Call ---
-async function runFormAnalysis() {
-  if (!state.selectedFile) return;
+// --- Mode Switching ---
+function setMode(mode) {
+  state.activeMode = mode;
+  if (mode === 'live') {
+    DOM.tabLiveMode.classList.add('active');
+    DOM.tabUploadMode.classList.remove('active');
+    DOM.liveArena.hidden = false;
+    DOM.uploadArena.hidden = true;
+    stopVideoFilePlayback();
+  } else {
+    DOM.tabUploadMode.classList.add('active');
+    DOM.tabLiveMode.classList.remove('active');
+    DOM.uploadArena.hidden = false;
+    DOM.liveArena.hidden = true;
+    stopWebcam();
+  }
+}
 
-  DOM.report.hidden = true;
-  DOM.errorState.hidden = true;
-  DOM.loadingState.hidden = false;
-  DOM.analyseButton.disabled = true;
+// --- Robust WebRTC Camera Acquisition with Fallback Cascade ---
+async function acquireCameraStream() {
+  // Strategy 1: Ideal resolution + preferred facingMode
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: state.facingMode,
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
+      audio: false
+    });
+  } catch (e1) {
+    console.warn('Strategy 1 camera constraints failed:', e1);
+  }
 
-  const formData = new FormData();
-  formData.append('file', state.selectedFile);
+  // Strategy 2: Basic video constraint (bypasses facingMode conflicts on Windows desktops)
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false
+    });
+  } catch (e2) {
+    console.warn('Strategy 2 basic video failed:', e2);
+  }
+
+  // Strategy 3: Enumerate devices directly
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoInputs = devices.filter(d => d.kind === 'videoinput');
+    if (videoInputs.length > 0) {
+      return await navigator.mediaDevices.getUserMedia({
+        video: { deviceId: { exact: videoInputs[0].deviceId } },
+        audio: false
+      });
+    }
+  } catch (e3) {
+    console.warn('Strategy 3 deviceId selection failed:', e3);
+  }
+
+  throw new Error('Camera device is busy, locked by another application, or denied by browser.');
+}
+
+async function startWebcam() {
+  stopWebcam();
+  DOM.cameraErrorBox.hidden = true;
 
   try {
-    const response = await fetch(`/api/v1/analyze?confidence=${DOM.confidence.value}`, {
-      method: 'POST',
-      body: formData
-    });
-    const result = await response.json();
+    const stream = await acquireCameraStream();
+    state.webcamStream = stream;
+    DOM.webcamVideo.srcObject = stream;
+    DOM.cameraStartPrompt.hidden = true;
+    DOM.stopCameraBtn.disabled = false;
+    state.isStreaming = true;
 
-    if (!response.ok) {
-      throw new Error(result.detail || result.message || 'Analysis request failed.');
-    }
-
-    if (!result.data || !result.data.detected) {
-      showError(result.data?.message || 'No full-body person pose was detected. Please try a clearer, wider photo.');
-      return;
-    }
-
-    state.analysisResult = result.data;
-    renderAnalysisReport(result.data);
-
+    DOM.webcamVideo.onloadedmetadata = () => {
+      runStreamInference();
+    };
   } catch (err) {
-    showError(err.message || 'Connection interrupted during analysis. Please try again.');
-  } finally {
-    DOM.loadingState.hidden = true;
-    DOM.analyseButton.disabled = false;
+    console.error('Camera startup error:', err);
+    DOM.cameraErrorMsg.textContent = `${err.message || 'Could not start camera source'}. Another program may be using your webcam, or camera permissions are blocked.`;
+    DOM.cameraErrorBox.hidden = false;
   }
 }
 
-// --- Render Report Dashboard ---
-function renderAnalysisReport(data) {
-  const person = data.people[0];
-  const metrics = person.metrics;
-  const angles = metrics.knee_angles || {};
-  const posture = metrics.posture || {};
-
-  // Setup preview image
-  const imgUrl = URL.createObjectURL(state.selectedFile);
-  DOM.preview.src = imgUrl;
-  DOM.preview.onload = () => {
-    state.sourceImageElement = DOM.preview;
-    renderPoseCanvas(DOM.preview, person.landmarks);
-  };
-
-  // Score Calculation
-  const formScore = calculateFormScore(metrics.squat_depth, person.confidence, posture);
-  DOM.scoreValue.textContent = formScore;
-  updateScoreRing(formScore);
-
-  // Depth & Exercise Badges
-  const depth = metrics.squat_depth || 'unknown';
-  DOM.depthChip.textContent = `${depth} depth`;
-  DOM.depthChip.className = `chip-depth ${depth}`;
-  
-  const exerciseLabel = metrics.exercise?.label ? capitalize(metrics.exercise.label) : 'Squat / Pose';
-  DOM.exerciseBadge.textContent = `Exercise: ${exerciseLabel}`;
-
-  // Angles & Posture Cards
-  DOM.leftAngle.textContent = angles.left !== undefined ? `${angles.left}°` : 'N/A';
-  DOM.rightAngle.textContent = angles.right !== undefined ? `${angles.right}°` : 'N/A';
-
-  if (posture.knee_angle_difference !== null && posture.knee_angle_difference !== undefined) {
-    DOM.kneeDiff.textContent = `${posture.knee_angle_difference}°`;
-    DOM.kneeDiffSub.textContent = posture.knee_angle_difference > 15 ? 'High Imbalance' : 'Balanced';
-    DOM.kneeDiffSub.style.color = posture.knee_angle_difference > 15 ? 'var(--accent-amber)' : 'var(--accent-emerald)';
-  } else {
-    DOM.kneeDiff.textContent = 'N/A';
-    DOM.kneeDiffSub.textContent = 'Need both legs visible';
+function stopWebcam() {
+  if (state.webcamStream) {
+    state.webcamStream.getTracks().forEach(track => track.stop());
+    state.webcamStream = null;
   }
-
-  if (posture.torso_lean_degrees !== null && posture.torso_lean_degrees !== undefined) {
-    DOM.torsoLean.textContent = `${posture.torso_lean_degrees}°`;
-    DOM.torsoLeanSub.textContent = posture.torso_lean_degrees > 45 ? 'Forward Lean' : 'Upright Chest';
-    DOM.torsoLeanSub.style.color = posture.torso_lean_degrees > 45 ? 'var(--accent-amber)' : 'var(--accent-emerald)';
-  } else {
-    DOM.torsoLean.textContent = 'N/A';
-    DOM.torsoLeanSub.textContent = 'Need torso view';
+  if (state.intervalTimer) {
+    clearInterval(state.intervalTimer);
+    state.intervalTimer = null;
   }
+  DOM.webcamVideo.srcObject = null;
+  DOM.cameraStartPrompt.hidden = false;
+  DOM.stopCameraBtn.disabled = true;
+  DOM.actionBadgeHUD.hidden = true;
+  DOM.stageBadgeHUD.hidden = true;
+  state.isStreaming = false;
 
-  DOM.kneeTracking.textContent = posture.knee_tracking === 'aligned' ? 'Aligned' : posture.knee_tracking === 'check_alignment' ? 'Valgus Risk' : 'N/A';
-  DOM.kneeTracking.style.color = posture.knee_tracking === 'aligned' ? 'var(--accent-emerald)' : posture.knee_tracking === 'check_alignment' ? 'var(--accent-amber)' : 'var(--text-dim)';
+  const ctx = DOM.liveCanvas.getContext('2d');
+  ctx.clearRect(0, 0, DOM.liveCanvas.width, DOM.liveCanvas.height);
+}
 
-  DOM.poseConfidence.textContent = `${Math.round(person.confidence * 100)}%`;
-  DOM.keypointsCount.textContent = `${metrics.visible_keypoints} / 17 keypoints`;
+function flipCameraLens() {
+  state.facingMode = state.facingMode === 'user' ? 'environment' : 'user';
+  if (state.isStreaming) {
+    startWebcam();
+  }
+}
 
-  // Feedback Bullet List
-  DOM.feedbackList.innerHTML = '';
-  if (person.feedback && person.feedback.length > 0) {
-    person.feedback.forEach(item => {
-      const li = document.createElement('li');
-      li.textContent = item;
-      DOM.feedbackList.appendChild(li);
+// --- Live Webcam Inference Loop ---
+function runStreamInference() {
+  const offscreen = document.createElement('canvas');
+  offscreen.width = 480;
+  offscreen.height = 360;
+  const offCtx = offscreen.getContext('2d');
+
+  state.intervalTimer = setInterval(() => {
+    if (!state.isStreaming || state.isProcessingFrame) return;
+
+    const video = DOM.webcamVideo;
+    if (!video.videoWidth || !video.videoHeight) return;
+
+    state.isProcessingFrame = true;
+    offCtx.drawImage(video, 0, 0, offscreen.width, offscreen.height);
+
+    offscreen.toBlob(async (blob) => {
+      if (!blob) {
+        state.isProcessingFrame = false;
+        return;
+      }
+
+      const form = new FormData();
+      form.append('file', blob, 'frame.jpg');
+
+      try {
+        const response = await fetch('/api/v1/process_frame', {
+          method: 'POST',
+          body: form
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.status === 'success' && result.data) {
+            refreshWorkoutDashboard(result.data, DOM.liveCanvas, video, true);
+          }
+        }
+      } catch (e) {
+      } finally {
+        state.frameCount++;
+        const now = performance.now();
+        if (now - state.lastFpsTime >= 1000) {
+          DOM.fpsCounter.textContent = Math.round((state.frameCount * 1000) / (now - state.lastFpsTime));
+          state.frameCount = 0;
+          state.lastFpsTime = now;
+        }
+        state.isProcessingFrame = false;
+      }
+    }, 'image/jpeg', 0.82);
+  }, state.sendIntervalMs);
+}
+
+// --- Upload Media (Image or Video) Handling ---
+function handleUploadedMedia(file) {
+  if (!file) return;
+
+  stopVideoFilePlayback();
+
+  if (file.type.startsWith('video/')) {
+    // Process as Workout Video
+    processVideoFile(file);
+  } else {
+    // Process as Workout Image
+    processImageFile(file);
+  }
+}
+
+function processImageFile(file) {
+  const url = URL.createObjectURL(file);
+  DOM.uploadDropArea.hidden = true;
+  DOM.uploadResultStage.hidden = false;
+  DOM.uploadPreviewVideo.hidden = true;
+  DOM.uploadPreviewImage.hidden = false;
+
+  DOM.uploadPreviewImage.src = url;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  fetch('/api/v1/process_frame', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (result.status === 'success' && result.data) {
+      const render = () => {
+        refreshWorkoutDashboard(result.data, DOM.uploadCanvas, DOM.uploadPreviewImage, false);
+      };
+      if (DOM.uploadPreviewImage.complete) {
+        render();
+      } else {
+        DOM.uploadPreviewImage.onload = render;
+      }
+    }
+  })
+  .catch(err => {
+    alert('Error analyzing image: ' + err.message);
+  });
+}
+
+function processVideoFile(file) {
+  const url = URL.createObjectURL(file);
+  DOM.uploadDropArea.hidden = true;
+  DOM.uploadResultStage.hidden = false;
+  DOM.uploadPreviewImage.hidden = true;
+  DOM.uploadPreviewVideo.hidden = false;
+
+  const video = DOM.uploadPreviewVideo;
+  video.src = url;
+  video.load();
+  video.play().catch(() => {});
+
+  const offscreen = document.createElement('canvas');
+  offscreen.width = 480;
+  offscreen.height = 360;
+  const offCtx = offscreen.getContext('2d');
+
+  state.videoPlaybackTimer = setInterval(() => {
+    if (video.paused || video.ended || state.isProcessingFrame) return;
+
+    if (!video.videoWidth || !video.videoHeight) return;
+
+    state.isProcessingFrame = true;
+    offCtx.drawImage(video, 0, 0, offscreen.width, offscreen.height);
+
+    offscreen.toBlob(async (blob) => {
+      if (!blob) {
+        state.isProcessingFrame = false;
+        return;
+      }
+
+      const form = new FormData();
+      form.append('file', blob, 'video_frame.jpg');
+
+      try {
+        const response = await fetch('/api/v1/process_frame', {
+          method: 'POST',
+          body: form
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.status === 'success' && result.data) {
+            refreshWorkoutDashboard(result.data, DOM.uploadCanvas, video, false);
+          }
+        }
+      } catch (e) {
+      } finally {
+        state.isProcessingFrame = false;
+      }
+    }, 'image/jpeg', 0.82);
+  }, 100);
+}
+
+function stopVideoFilePlayback() {
+  if (state.videoPlaybackTimer) {
+    clearInterval(state.videoPlaybackTimer);
+    state.videoPlaybackTimer = null;
+  }
+  if (DOM.uploadPreviewVideo) {
+    DOM.uploadPreviewVideo.pause();
+    DOM.uploadPreviewVideo.src = '';
+  }
+}
+
+function loadSample(samplePath) {
+  fetch(samplePath)
+    .then(r => r.blob())
+    .then(blob => {
+      const file = new File([blob], samplePath.split('/').pop(), { type: blob.type });
+      handleUploadedMedia(file);
+    })
+    .catch(e => {
+      alert('Could not load sample file: ' + e.message);
     });
+}
+
+// --- Dashboard & HUD Update ---
+function refreshWorkoutDashboard(data, canvas, visualSource, isMirrored) {
+  const counters = data.counters || { curl: 0, press: 0, squat: 0 };
+  const stages = data.stages || { curl: null, press: null, squat: null };
+
+  // 1. Update Rep Numbers & Goal Bars
+  DOM.curlCount.textContent = counters.curl;
+  DOM.pressCount.textContent = counters.press;
+  DOM.squatCount.textContent = counters.squat;
+
+  DOM.curlProgressBar.style.width = `${Math.min(100, (counters.curl / state.targets.curl) * 100)}%`;
+  DOM.pressProgressBar.style.width = `${Math.min(100, (counters.press / state.targets.press) * 100)}%`;
+  DOM.squatProgressBar.style.width = `${Math.min(100, (counters.squat / state.targets.squat) * 100)}%`;
+
+  // 2. Stage Chips
+  setPhaseChip(DOM.curlStageBadge, stages.curl);
+  setPhaseChip(DOM.pressStageBadge, stages.press);
+  setPhaseChip(DOM.squatStageBadge, stages.squat);
+
+  // 3. Highlight Active Card
+  DOM.cardCurl.classList.toggle('active', data.current_action === 'curl');
+  DOM.cardPress.classList.toggle('active', data.current_action === 'press');
+  DOM.cardSquat.classList.toggle('active', data.current_action === 'squat');
+
+  // 4. Rep Completion Popup Event
+  if (data.rep_event) {
+    triggerRepModal(data.rep_event);
+  }
+
+  // 5. Update Estimated Calories
+  updateEstimatedCalories(counters);
+
+  // 6. On-Screen HUD Action & Stage Badges
+  if (data.current_action) {
+    const names = { curl: 'BICEP CURL', press: 'SHOULDER PRESS', squat: 'SQUAT' };
+    const confPct = Math.round((data.confidence || 0) * 100);
+    DOM.actionHUDText.textContent = `${names[data.current_action] || data.current_action.toUpperCase()} (${confPct}%)`;
+    DOM.actionBadgeHUD.hidden = false;
+
+    const activeStage = stages[data.current_action];
+    if (activeStage) {
+      DOM.stageHUDText.textContent = activeStage.toUpperCase();
+      DOM.stageBadgeHUD.hidden = false;
+    } else {
+      DOM.stageBadgeHUD.hidden = true;
+    }
   } else {
-    const li = document.createElement('li');
-    li.textContent = 'Great overall form! Maintain your balance and posture.';
-    DOM.feedbackList.appendChild(li);
+    DOM.actionBadgeHUD.hidden = true;
+    DOM.stageBadgeHUD.hidden = true;
   }
 
-  DOM.report.hidden = false;
-  DOM.report.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // 7. Probability Progress Bars
+  const probs = data.probabilities || { curl: 0, press: 0, squat: 0 };
+  const cPct = Math.round((probs.curl || 0) * 100);
+  const pPct = Math.round((probs.press || 0) * 100);
+  const sPct = Math.round((probs.squat || 0) * 100);
+
+  DOM.probCurlLabel.textContent = `${cPct}%`;
+  DOM.probCurlBar.style.width = `${cPct}%`;
+  DOM.probPressLabel.textContent = `${pPct}%`;
+  DOM.probPressBar.style.width = `${pPct}%`;
+  DOM.probSquatLabel.textContent = `${sPct}%`;
+  DOM.probSquatBar.style.width = `${sPct}%`;
+
+  // 8. Kinematic Angles
+  const angles = data.angles || {};
+  DOM.angleLeftElbow.textContent = angles.left_elbow !== undefined ? `${angles.left_elbow}°` : '--°';
+  DOM.angleRightElbow.textContent = angles.right_elbow !== undefined ? `${angles.right_elbow}°` : '--°';
+  DOM.angleLeftKnee.textContent = angles.left_knee !== undefined ? `${angles.left_knee}°` : '--°';
+  DOM.angleRightKnee.textContent = angles.right_knee !== undefined ? `${angles.right_knee}°` : '--°';
+  DOM.angleLeftHip.textContent = angles.left_hip !== undefined ? `${angles.left_hip}°` : '--°';
+  DOM.angleRightHip.textContent = angles.right_hip !== undefined ? `${angles.right_hip}°` : '--°';
+
+  // 9. Dynamic AI Coaching Notes
+  updateCoachTips(data.current_action, stages[data.current_action], angles);
+
+  // 10. Draw Canvas Overlay
+  drawSkeletonOverlay(canvas, visualSource, data.landmarks || [], angles, isMirrored);
 }
 
-// Score Ring Animation (264 total circumference)
-function updateScoreRing(score) {
-  const maxDash = 264;
-  const offset = maxDash - (maxDash * (score / 100));
-  DOM.scoreRingProgress.style.strokeDashoffset = offset;
-  
-  if (score >= 85) {
-    DOM.scoreRingProgress.style.stroke = 'var(--accent-emerald)';
-  } else if (score >= 65) {
-    DOM.scoreRingProgress.style.stroke = 'var(--accent-cyan)';
-  } else {
-    DOM.scoreRingProgress.style.stroke = 'var(--accent-amber)';
+function setPhaseChip(element, stage) {
+  if (!stage) {
+    element.textContent = 'REST';
+    element.className = 'phase-chip';
+  } else if (stage === 'up') {
+    element.textContent = 'UP';
+    element.className = 'phase-chip up';
+  } else if (stage === 'down') {
+    element.textContent = 'DOWN';
+    element.className = 'phase-chip down';
   }
 }
 
-function calculateFormScore(depth, confidence, posture) {
-  const baseMap = { deep: 95, parallel: 82, shallow: 65, unknown: 50 };
-  let score = baseMap[depth] || 50;
-
-  // Deduct points for high knee asymmetry or extreme forward torso lean
-  if (typeof posture.knee_angle_difference === 'number' && posture.knee_angle_difference > 15) {
-    score -= 10;
-  }
-  if (typeof posture.torso_lean_degrees === 'number' && posture.torso_lean_degrees > 50) {
-    score -= 10;
-  }
-
-  // Weight confidence factor
-  const finalScore = Math.round(score * 0.8 + confidence * 20);
-  return Math.max(10, Math.min(100, finalScore));
+function triggerRepModal(exercise) {
+  playRepChime();
+  DOM.repPopExercise.textContent = `${exercise.toUpperCase()} COMPLETE!`;
+  DOM.repAnimationOverlay.hidden = false;
+  DOM.repAnimationOverlay.style.animation = 'none';
+  DOM.repAnimationOverlay.offsetHeight; // trigger reflow
+  DOM.repAnimationOverlay.style.animation = 'rep-pop 0.8s ease-out forwards';
+  setTimeout(() => {
+    DOM.repAnimationOverlay.hidden = true;
+  }, 800);
 }
 
-// --- Canvas Pose Skeleton Overlay ---
-function renderPoseCanvas(imgElement, landmarks) {
-  const canvas = DOM.poseCanvas;
-  const rect = imgElement.getBoundingClientRect();
-  const naturalW = imgElement.naturalWidth || rect.width;
-  const naturalH = imgElement.naturalHeight || rect.height;
+function updateCoachTips(action, stage, angles) {
+  if (!action) {
+    DOM.coachNoteText.textContent = 'Keep your full body visible in frame to begin automatic tracking.';
+    return;
+  }
+  if (action === 'curl') {
+    if (stage === 'up') {
+      DOM.coachNoteText.textContent = 'Peak contraction! Now lower arms slowly for maximum hypertrophy.';
+    } else {
+      DOM.coachNoteText.textContent = 'Keep upper arms locked against your torso while curling.';
+    }
+  } else if (action === 'press') {
+    if (stage === 'up') {
+      DOM.coachNoteText.textContent = 'Full extension overhead! Lower elbows down to shoulder height with control.';
+    } else {
+      DOM.coachNoteText.textContent = 'Drive the weight straight up without hyperextending your spine.';
+    }
+  } else if (action === 'squat') {
+    if (stage === 'down') {
+      DOM.coachNoteText.textContent = 'Great depth! Drive through heels and hips to stand tall.';
+    } else {
+      DOM.coachNoteText.textContent = 'Keep chest proud and track knees over toes as you sit back.';
+    }
+  }
+}
 
+// --- Canvas Skeleton & Joint Angle Visualization ---
+function drawSkeletonOverlay(canvas, sourceEl, landmarks, angles, isMirrored) {
+  if (!sourceEl || !canvas) return;
+
+  const rect = sourceEl.getBoundingClientRect();
+  const parentRect = sourceEl.parentElement.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
 
   const dpr = window.devicePixelRatio || 1;
   canvas.width = rect.width * dpr;
   canvas.height = rect.height * dpr;
+  canvas.style.left = `${rect.left - parentRect.left}px`;
+  canvas.style.top = `${rect.top - parentRect.top}px`;
   canvas.style.width = `${rect.width}px`;
   canvas.style.height = `${rect.height}px`;
 
   const ctx = canvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, rect.width, rect.height);
 
-  const scaleX = rect.width / naturalW;
-  const scaleY = rect.height / naturalH;
+  if (!landmarks || landmarks.length === 0) return;
 
-  // 1. Draw Skeleton Lines
+  const lmMap = {};
+  landmarks.forEach(lm => {
+    lmMap[lm.id] = lm;
+  });
+
+  const natW = sourceEl.videoWidth || sourceEl.naturalWidth || rect.width;
+  const natH = sourceEl.videoHeight || sourceEl.naturalHeight || rect.height;
+  const scaleX = rect.width / natW;
+  const scaleY = rect.height / natH;
+
+  // 1. Draw Skeletal Connections
   if (DOM.toggleSkeleton.checked) {
-    ctx.strokeStyle = '#00ff87';
-    ctx.lineWidth = 3;
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = '#00ff87';
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 3.5;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = '#10b981';
 
-    COCO_PAIRS.forEach(([p1, p2]) => {
-      const pt1 = landmarks[p1];
-      const pt2 = landmarks[p2];
-      if (pt1 && pt2 && pt1.confidence > 0.25 && pt2.confidence > 0.25) {
+    POSE_CONNECTIONS.forEach(([i1, i2]) => {
+      const p1 = lmMap[i1];
+      const p2 = lmMap[i2];
+      if (p1 && p2 && p1.visibility > 0.35 && p2.visibility > 0.35) {
+        const x1 = isMirrored ? (natW - p1.x) * scaleX : p1.x * scaleX;
+        const y1 = p1.y * scaleY;
+        const x2 = isMirrored ? (natW - p2.x) * scaleX : p2.x * scaleX;
+        const y2 = p2.y * scaleY;
+
         ctx.beginPath();
-        ctx.moveTo(pt1.x * scaleX, pt1.y * scaleY);
-        ctx.lineTo(pt2.x * scaleX, pt2.y * scaleY);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
         ctx.stroke();
       }
     });
   }
 
-  // 2. Draw Joint Markers
-  if (DOM.toggleJoints.checked) {
-    Object.entries(landmarks).forEach(([name, pt]) => {
-      if (pt.confidence > 0.25) {
-        const x = pt.x * scaleX;
-        const y = pt.y * scaleY;
+  // 2. Draw Landmark Joints
+  landmarks.forEach(lm => {
+    if (lm.visibility > 0.35) {
+      const x = isMirrored ? (natW - lm.x) * scaleX : lm.x * scaleX;
+      const y = lm.y * scaleY;
 
-        // Outer Glow Ring
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 240, 255, 0.4)';
-        ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#06b6d4';
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = '#06b6d4';
+      ctx.fill();
+    }
+  });
 
-        // Inner Dot
-        ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
-      }
-    });
-  }
-
-  // 3. Draw Knee Angle Labels
-  if (DOM.toggleLabels.checked) {
+  // 3. Draw Floating Kinematic Angle Labels
+  if (DOM.toggleAngles.checked && angles) {
     ctx.font = 'bold 12px "JetBrains Mono", monospace';
-    ctx.fillStyle = '#00f0ff';
+    ctx.fillStyle = '#ffffff';
     ctx.shadowBlur = 6;
     ctx.shadowColor = '#000000';
 
-    ['left_knee', 'right_knee'].forEach(kneeName => {
-      const pt = landmarks[kneeName];
-      if (pt && pt.confidence > 0.25) {
-        const label = kneeName.includes('left') ? 'L Knee' : 'R Knee';
-        ctx.fillText(label, pt.x * scaleX + 10, pt.y * scaleY + 4);
+    const drawTag = (id, val) => {
+      const lm = lmMap[id];
+      if (lm && lm.visibility > 0.35 && val !== undefined) {
+        const x = isMirrored ? (natW - lm.x) * scaleX : lm.x * scaleX;
+        const y = lm.y * scaleY;
+        ctx.fillText(`${Math.round(val)}°`, x + 8, y + 4);
       }
-    });
+    };
+
+    drawTag(13, angles.left_elbow);
+    drawTag(14, angles.right_elbow);
+    drawTag(25, angles.left_knee);
+    drawTag(26, angles.right_knee);
   }
 }
 
-// --- Download Annotated Photo Feature ---
-function downloadAnnotatedSnapshot() {
-  if (!state.sourceImageElement) return;
+// --- Reset Workout Stats ---
+async function resetAllWorkoutStats() {
+  try {
+    const res = await fetch('/api/v1/reset_counters', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      DOM.curlCount.textContent = '0';
+      DOM.pressCount.textContent = '0';
+      DOM.squatCount.textContent = '0';
+      DOM.curlProgressBar.style.width = '0%';
+      DOM.pressProgressBar.style.width = '0%';
+      DOM.squatProgressBar.style.width = '0%';
+      setPhaseChip(DOM.curlStageBadge, null);
+      setPhaseChip(DOM.pressStageBadge, null);
+      setPhaseChip(DOM.squatStageBadge, null);
+      state.sessionSeconds = 0;
+      DOM.sessionTimer.textContent = '00:00';
+      DOM.estCalories.textContent = '0 kcal';
+    }
+  } catch (e) {}
+}
 
-  const exportCanvas = document.createElement('canvas');
-  const img = state.sourceImageElement;
-  const w = img.naturalWidth;
-  const h = img.naturalHeight;
+// --- Sync Slider Settings ---
+async function syncSliderSettings() {
+  DOM.valDetectText.textContent = parseFloat(DOM.sliderDetect.value).toFixed(2);
+  DOM.valTrackText.textContent = parseFloat(DOM.sliderTrack.value).toFixed(2);
+  DOM.valClassifyText.textContent = parseFloat(DOM.sliderClassify.value).toFixed(2);
 
-  exportCanvas.width = w;
-  exportCanvas.height = h;
-  const ctx = exportCanvas.getContext('2d');
+  try {
+    await fetch('/api/v1/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        min_detection_confidence: parseFloat(DOM.sliderDetect.value),
+        min_tracking_confidence: parseFloat(DOM.sliderTrack.value),
+        classification_threshold: parseFloat(DOM.sliderClassify.value)
+      })
+    });
+  } catch (e) {}
+}
 
-  // Draw source image
-  ctx.drawImage(img, 0, 0, w, h);
+// --- Drag & Drop ---
+function bindDragAndDrop() {
+  const dropZone = DOM.uploadDropArea;
+  if (!dropZone) return;
 
-  // Draw overlay landmarks directly at 1:1 scale
-  const landmarks = state.analysisResult?.people[0]?.landmarks || {};
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+    window.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }, false);
+    dropZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }, false);
+  });
 
-  // Lines
-  ctx.strokeStyle = '#00ff87';
-  ctx.lineWidth = Math.max(3, Math.round(w / 300));
-  COCO_PAIRS.forEach(([p1, p2]) => {
-    const pt1 = landmarks[p1];
-    const pt2 = landmarks[p2];
-    if (pt1 && pt2 && pt1.confi
+  ['dragenter', 'dragover'].forEach(evt => {
+    dropZone.addEventListener(evt, () => dropZone.classList.add('dragging'), false);
+  });
+
+  ['dragleave', 'drop'].forEach(evt => {
+    dropZone.addEventListener(evt, () => dropZone.classList.remove('dragging'), false);
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    const file = e.dataTransfer?.files?.[0];
+    if (file) {
+      handleUploadedMedia(file);
+    }
+  }, false);
+}

@@ -3,303 +3,408 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Form Coach AI — Exercise Form & Posture Analyzer</title>
+  <title>PulseAI — Pro Fitness Trainer & Exercise Recognition</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="noise"></div>
-  
-  <header>
-    <a href="/" class="brand">
-      <div class="brand-mark">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="5" r="3"/>
-          <path d="M6 22l4-8 2 2 4-5"/>
-          <path d="M12 10v4"/>
-        </svg>
+  <div class="ambient-glow"></div>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-badge">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <span class="brand-name">Pulse<strong>AI</strong></span>
+          <span class="brand-tag">VISION FITNESS TRAINER</span>
+        </div>
       </div>
-      <span>Form Coach <span>AI</span></span>
-    </a>
-    
+
+      <div class="session-stat-pill">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="stat-label">SESSION:</span>
+        <span id="sessionTimer" class="stat-value">00:00</span>
+      </div>
+
+      <div class="session-stat-pill">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span class="stat-label">CALORIES:</span>
+        <span id="estCalories" class="stat-value">0 kcal</span>
+      </div>
+    </div>
+
     <div class="header-right">
-      <div id="healthBadge" class="live-pill">
-        <i class="dot"></i> <span id="healthStatus">Checking service...</span>
+      <div id="aiStatusPill" class="status-indicator-pill">
+        <span class="status-dot"></span>
+        <span id="aiStatusText">AI Ready</span>
       </div>
-      <nav>
-        <a href="/docs" target="_blank">API Docs</a>
-      </nav>
+
+      <button id="resetWorkoutBtn" class="action-btn" type="button" title="Reset current session & counters">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <span>Reset Workout</span>
+      </button>
     </div>
   </header>
 
-  <main>
-    <!-- Hero Banner -->
-    <section class="hero">
-      <div class="hero-content">
-        <div class="overline">POWERED BY OPENCV & YOLO POSE</div>
-        <h1>AI Exercise Form <em>& Posture Coach</em></h1>
-        <p class="hero-copy">
-          Capture a photo directly using your camera or upload an image to receive instant biomechanical feedback, joint angle analysis, and pose overlay.
-        </p>
+  <main class="main-container">
+    <!-- Top 3 Exercise Trackers Row -->
+    <section class="exercise-cards-strip">
+      <!-- 1. Bicep Curls Card -->
+      <div id="cardCurl" class="workout-card">
+        <div class="card-top">
+          <div class="exercise-icon-badge curl">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          </div>
+          <div class="exercise-meta">
+            <span class="exercise-title">BICEP CURLS</span>
+            <span class="exercise-target">Goal: 12 reps</span>
+          </div>
+          <span id="curlStageBadge" class="phase-chip">REST</span>
+        </div>
+        <div class="card-bottom">
+          <div class="rep-display">
+            <span id="curlCount" class="rep-number">0</span>
+            <span class="rep-unit">REPS</span>
+          </div>
+          <div class="progress-track">
+            <div id="curlProgressBar" class="progress-fill curl" style="width: 0%;"></div>
+          </div>
+        </div>
       </div>
-      
-      <div class="hero-stats card-glass">
-        <div class="stat-item">
-          <span class="stat-num">17</span>
-          <span class="stat-desc">COCO Keypoints</span>
+
+      <!-- 2. Shoulder Press Card -->
+      <div id="cardPress" class="workout-card">
+        <div class="card-top">
+          <div class="exercise-icon-badge press">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M6 10l6-2 6 2"/><path d="M12 8v8"/><path d="M8 22l4-6 4 6"/><path d="M6 10v6"/><path d="M18 10v6"/></svg>
+          </div>
+          <div class="exercise-meta">
+            <span class="exercise-title">SHOULDER PRESS</span>
+            <span class="exercise-target">Goal: 10 reps</span>
+          </div>
+          <span id="pressStageBadge" class="phase-chip">REST</span>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-num">3D</span>
-          <span class="stat-desc">Joint Metrics</span>
+        <div class="card-bottom">
+          <div class="rep-display">
+            <span id="pressCount" class="rep-number">0</span>
+            <span class="rep-unit">REPS</span>
+          </div>
+          <div class="progress-track">
+            <div id="pressProgressBar" class="progress-fill press" style="width: 0%;"></div>
+          </div>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-num">Real-Time</span>
-          <span class="stat-desc">Form Feedback</span>
+      </div>
+
+      <!-- 3. Squats Card -->
+      <div id="cardSquat" class="workout-card">
+        <div class="card-top">
+          <div class="exercise-icon-badge squat">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><path d="M6 22l4-8 2 2 4-5"/><path d="M12 10v4"/></svg>
+          </div>
+          <div class="exercise-meta">
+            <span class="exercise-title">SQUATS</span>
+            <span class="exercise-target">Goal: 15 reps</span>
+          </div>
+          <span id="squatStageBadge" class="phase-chip">REST</span>
+        </div>
+        <div class="card-bottom">
+          <div class="rep-display">
+            <span id="squatCount" class="rep-number">0</span>
+            <span class="rep-unit">REPS</span>
+          </div>
+          <div class="progress-track">
+            <div id="squatProgressBar" class="progress-fill squat" style="width: 0%;"></div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Main Workspace -->
-    <section class="workspace card-glass">
-      <!-- Input Mode Selector Header -->
-      <div class="input-tabs">
-        <button id="tabCamera" class="tab-btn active" type="button">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          Take Photo (Camera)
-        </button>
-        <button id="tabUpload" class="tab-btn" type="button">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Upload Image
-        </button>
-      </div>
-
-      <!-- Mode 1: Camera Interface -->
-      <div id="cameraView" class="input-panel active">
-        <div class="camera-container">
-          <video id="webcamVideo" autoplay playsinline muted></video>
-          <div id="cameraGuide" class="camera-guide">
-            <div class="guide-box">
-              <span class="guide-text">Position full body inside frame</span>
-            </div>
-          </div>
-          <div id="countdownOverlay" class="countdown-overlay" hidden>3</div>
-          <div id="cameraError" class="camera-error" hidden>
-            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <p id="cameraErrMsg">Camera access unavailable.</p>
-            <button id="retryCameraBtn" class="btn-secondary" type="button">Retry Camera</button>
-          </div>
-        </div>
-
-        <div class="camera-controls">
-          <button id="toggleTimerBtn" class="btn-chip" type="button" title="Toggle 3s Self Timer">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span id="timerStatus">Timer: 3s</span>
-          </button>
-          
-          <button id="shutterBtn" class="shutter-btn" type="button" title="Take Snapshot">
-            <span class="shutter-inner"></span>
-          </button>
-          
-          <button id="switchCamBtn" class="btn-chip" type="button" title="Switch Camera" hidden>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-            Flip
-          </button>
-        </div>
-      </div>
-
-      <!-- Mode 2: File Upload Interface -->
-      <div id="uploadView" class="input-panel">
-        <div id="dropZone" class="dropzone">
-          <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
-          <div class="dropzone-content">
-            <div class="upload-icon-ring">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            </div>
-            <h3>Drag and drop your pose image here</h3>
-            <p>Supports JPEG, PNG, WEBP (Max 10 MB)</p>
-            <button id="browseBtn" class="btn-secondary" type="button">Browse Files</button>
-          </div>
-        </div>
-
-        <!-- Sample Images Bar -->
-        <div class="sample-section">
-          <span class="sample-label">Or try a sample image:</span>
-          <div class="sample-chips">
-            <button class="sample-chip" data-src="/squat.webp" type="button">🏋️ Squat Sample</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Active Selection & Settings Bar -->
-      <div class="action-bar">
-        <div id="selectedInfo" class="selected-info" hidden>
-          <div class="thumb-wrapper">
-            <img id="selectedThumb" alt="Selected photo thumbnail">
-          </div>
-          <div class="selected-details">
-            <strong id="selectedName">photo.jpg</strong>
-            <span id="selectedMeta">0.0 MB</span>
-          </div>
-          <button id="removeSelectedBtn" class="btn-icon" type="button" title="Remove selection">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-
-        <div class="confidence-control">
-          <div class="confidence-label-row">
-            <label for="confidence">Detection Confidence</label>
-            <span id="confidenceValue" class="mono-badge">0.35 — Balanced</span>
-          </div>
-          <input id="confidence" class="slider" type="range" min="0.1" max="0.9" step="0.05" value="0.35">
-        </div>
-
-        <button id="analyseButton" class="btn-primary" type="button" disabled>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span>Analyze Form</span>
-        </button>
-      </div>
-
-      <!-- State Displays -->
-      <!-- Loading State -->
-      <div id="loadingState" class="state-card" hidden>
-        <div class="scanner-box">
-          <div class="scanner-line"></div>
-          <div class="spinner-ring"></div>
-        </div>
-        <h3>Analyzing Pose & Biomechanics</h3>
-        <p>Running YOLO pose estimation, calculating joint vectors & squat angles...</p>
-      </div>
-
-      <!-- Error State -->
-      <div id="errorState" class="state-card state-error" hidden>
-        <div class="error-icon">
-          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        </div>
-        <h3 id="errorHeading">Analysis Couldn't Complete</h3>
-        <p id="errorText" class="error-msg">Please upload a clearer image.</p>
-        <button id="tryAgainBtn" class="btn-secondary" type="button">Try Again</button>
-      </div>
-
-      <!-- Results Dashboard Report -->
-      <div id="report" class="report-section" hidden>
-        <div class="report-header">
-          <div>
-            <div class="overline">ANALYSIS COMPLETE</div>
-            <h2>Biomechanical Form Report</h2>
-          </div>
-          <div class="report-actions">
-            <button id="downloadAnnotatedBtn" class="btn-chip" type="button" title="Download Pose Image">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Save Pose Photo
+    <!-- Main Workout Hub -->
+    <div class="hub-grid">
+      <!-- Left: Workout Arena / Camera Viewport -->
+      <section class="arena-section panel-surface">
+        <div class="arena-toolbar">
+          <div class="mode-tabs">
+            <button id="tabLiveMode" class="mode-tab active" type="button">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+              Live Webcam
+            </button>
+            <button id="tabUploadMode" class="mode-tab" type="button">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload Photo / Video
             </button>
           </div>
+
+          <div class="arena-controls">
+            <label class="control-toggle" title="Render 33-point MediaPipe skeleton">
+              <input id="toggleSkeleton" type="checkbox" checked>
+              <span>Skeleton</span>
+            </label>
+            <label class="control-toggle" title="Display floating joint angle degrees on body">
+              <input id="toggleAngles" type="checkbox" checked>
+              <span>Angles</span>
+            </label>
+            <label class="control-toggle" title="Play sound chime on rep completion">
+              <input id="toggleAudio" type="checkbox" checked>
+              <span>Rep Chime</span>
+            </label>
+          </div>
         </div>
 
-        <div class="report-grid">
-          <!-- Canvas Overlay Column -->
-          <div class="viewport-card">
-            <div class="canvas-wrapper">
-              <img id="preview" class="preview-img" alt="Captured pose source">
-              <canvas id="poseCanvas"></canvas>
-            </div>
-            
-            <div class="canvas-toolbar">
-              <label class="toggle-control">
-                <input id="toggleSkeleton" type="checkbox" checked>
-                <span>Skeleton Lines</span>
-              </label>
-              <label class="toggle-control">
-                <input id="toggleJoints" type="checkbox" checked>
-                <span>Joint Points</span>
-              </label>
-              <label class="toggle-control">
-                <input id="toggleLabels" type="checkbox" checked>
-                <span>Angles</span>
-              </label>
-            </div>
-          </div>
+        <!-- Mode 1: Live Webcam Arena -->
+        <div id="liveArena" class="viewport-box">
+          <div class="video-stage">
+            <video id="webcamVideo" autoplay playsinline muted></video>
+            <canvas id="liveCanvas"></canvas>
 
-          <!-- Form Metrics Column -->
-          <div class="metrics-column">
-            <!-- Score & Depth Banner -->
-            <div class="score-card">
-              <div class="score-ring-container">
-                <svg class="score-ring-svg" viewBox="0 0 100 100">
-                  <circle class="score-ring-bg" cx="50" cy="50" r="42"/>
-                  <circle id="scoreRingProgress" class="score-ring-fill" cx="50" cy="50" r="42"/>
-                </svg>
-                <div class="score-value-box">
-                  <span id="scoreValue" class="score-num">--</span>
-                  <span class="score-label">SCORE</span>
+            <!-- On-Screen Smart HUD -->
+            <div id="actionBadgeHUD" class="hud-pill" hidden>
+              <span class="hud-pulse"></span>
+              <span id="actionHUDText">EXERCISE RECOGNIZING...</span>
+            </div>
+
+            <div id="stageBadgeHUD" class="hud-stage-pill" hidden>
+              <span class="stage-label">STAGE:</span>
+              <strong id="stageHUDText">UP</strong>
+            </div>
+
+            <div id="repAnimationOverlay" class="rep-pop-modal" hidden>
+              <div class="rep-pop-content">
+                <span class="rep-pop-plus">+1</span>
+                <span id="repPopExercise" class="rep-pop-label">REP!</span>
+              </div>
+            </div>
+
+            <!-- Start Prompt Overlay -->
+            <div id="cameraStartPrompt" class="camera-welcome-overlay">
+              <div class="welcome-box">
+                <div class="welcome-icon">
+                  <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                </div>
+                <h2>Live Vision Workout</h2>
+                <p id="cameraPromptSubtitle">Turn on your camera to start real-time exercise classification, angle tracking & rep counting.</p>
+                
+                <div class="prompt-btn-group">
+                  <button id="startCameraBtn" class="btn-glow-primary" type="button">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Start Camera
+                  </button>
+                  <button id="goToUploadBtn" class="btn-subtle" type="button">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Or Upload File
+                  </button>
+                </div>
+
+                <!-- Camera Error Alert Box -->
+                <div id="cameraErrorBox" class="camera-error-banner" hidden>
+                  <span id="cameraErrorMsg">Camera device not found or blocked by browser.</span>
+                  <div class="camera-error-actions">
+                    <button id="retryCamBtn" class="btn-chip" type="button">Retry Camera</button>
+                    <button id="useSampleBtn" class="btn-chip active" type="button">Test Sample Exercise</button>
+                  </div>
                 </div>
               </div>
-
-              <div class="depth-badge-box">
-                <div class="badge-label">Squat Depth</div>
-                <div id="depthChip" class="chip-depth unknown">UNKNOWN</div>
-                <div id="exerciseBadge" class="chip-exercise">Exercise: Pose</div>
-              </div>
             </div>
+          </div>
 
-            <!-- Joint Metrics Grid -->
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <span class="metric-title">LEFT KNEE ANGLE</span>
-                <strong id="leftAngle" class="metric-value">--°</strong>
-                <span class="metric-sub">Optimal: 80°-100°</span>
-              </div>
-              
-              <div class="metric-card">
-                <span class="metric-title">RIGHT KNEE ANGLE</span>
-                <strong id="rightAngle" class="metric-value">--°</strong>
-                <span class="metric-sub">Optimal: 80°-100°</span>
-              </div>
-
-              <div class="metric-card">
-                <span class="metric-title">KNEE IMBALANCE</span>
-                <strong id="kneeDiff" class="metric-value">--°</strong>
-                <span id="kneeDiffSub" class="metric-sub">Side-to-side diff</span>
-              </div>
-
-              <div class="metric-card">
-                <span class="metric-title">TORSO LEAN</span>
-                <strong id="torsoLean" class="metric-value">--°</strong>
-                <span id="torsoLeanSub" class="metric-sub">From vertical</span>
-              </div>
-
-              <div class="metric-card">
-                <span class="metric-title">KNEE TRACKING</span>
-                <strong id="kneeTracking" class="metric-value">--</strong>
-                <span class="metric-sub">Toe alignment</span>
-              </div>
-
-              <div class="metric-card">
-                <span class="metric-title">DETECTION CONF.</span>
-                <strong id="poseConfidence" class="metric-value">--%</strong>
-                <span id="keypointsCount" class="metric-sub">17 keypoints</span>
-              </div>
+          <!-- Bottom Camera Bar -->
+          <div class="arena-footer">
+            <div class="footer-left">
+              <button id="stopCameraBtn" class="btn-subtle" type="button" disabled>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                Stop Camera
+              </button>
+              <button id="flipCameraBtn" class="btn-subtle" type="button" title="Flip camera lens">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Flip Lens
+              </button>
             </div>
-
-            <!-- Feedback & Suggestions Box -->
-            <div class="feedback-card">
-              <h4>AI Coaching Notes</h4>
-              <ul id="feedbackList" class="feedback-list">
-                <li>No feedback available.</li>
-              </ul>
+            <div class="footer-right">
+              <span class="fps-badge">STREAM: <strong id="fpsCounter">0</strong> FPS</span>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+
+        <!-- Mode 2: Photo / Video File Upload Arena -->
+        <div id="uploadArena" class="viewport-box" hidden>
+          <div id="uploadDropArea" class="drop-zone-surface">
+            <input id="filePicker" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/ogg,video/quicktime" hidden>
+            <div class="drop-zone-inner">
+              <div class="drop-icon">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <h3>Drag & drop your workout photo or video</h3>
+              <p>Supports JPG, PNG, WEBP, MP4, WEBM with real-time pose extraction & tracking</p>
+              
+              <div class="upload-btn-row">
+                <button id="browseFileBtn" class="btn-glow-primary" type="button">Select Media File</button>
+              </div>
+
+              <!-- 1-Click Sample Previews -->
+              <div class="sample-pills-row">
+                <span>Or test instant samples:</span>
+                <button id="sampleSquatBtn" class="sample-chip" type="button">⚡ Squat Sample</button>
+                <button id="samplePressBtn" class="sample-chip" type="button">⚡ Shoulder Press Sample</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upload Analysis Result Display Area -->
+          <div id="uploadResultStage" class="video-stage upload-stage" hidden>
+            <img id="uploadPreviewImage" alt="Analyzed workout pose" hidden>
+            <video id="uploadPreviewVideo" playsinline controls loop hidden></video>
+            <canvas id="uploadCanvas"></canvas>
+
+            <div class="upload-stage-actions">
+              <button id="changeFileBtn" class="btn-subtle" type="button">Upload Different File</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: AI Telemetry, Kinematics & Settings -->
+      <aside class="sidebar-telemetry">
+        <!-- 1. Real-Time Neural Classification Confidence -->
+        <div class="telemetry-panel panel-surface">
+          <div class="panel-header">
+            <h3>Recognition Confidence</h3>
+            <span class="panel-pill">Attention-LSTM</span>
+          </div>
+
+          <div class="probability-bars-group">
+            <!-- Bicep Curls -->
+            <div class="meter-row">
+              <div class="meter-header">
+                <span class="meter-name">💪 Bicep Curl</span>
+                <span id="probCurlLabel" class="meter-pct">0%</span>
+              </div>
+              <div class="meter-track">
+                <div id="probCurlBar" class="meter-fill curl" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <!-- Shoulder Press -->
+            <div class="meter-row">
+              <div class="meter-header">
+                <span class="meter-name">🏋️‍♂️ Shoulder Press</span>
+                <span id="probPressLabel" class="meter-pct">0%</span>
+              </div>
+              <div class="meter-track">
+                <div id="probPressBar" class="meter-fill press" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <!-- Squats -->
+            <div class="meter-row">
+              <div class="meter-header">
+                <span class="meter-name">🦵 Squat</span>
+                <span id="probSquatLabel" class="meter-pct">0%</span>
+              </div>
+              <div class="meter-track">
+                <div id="probSquatBar" class="meter-fill squat" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Kinematic Joint Angles -->
+        <div class="telemetry-panel panel-surface">
+          <div class="panel-header">
+            <h3>Joint Angle Telemetry</h3>
+            <span class="panel-pill">Kinematics</span>
+          </div>
+
+          <div class="joint-angles-grid">
+            <div class="joint-card">
+              <span class="joint-label">L. ELBOW</span>
+              <strong id="angleLeftElbow" class="joint-value">--°</strong>
+              <span class="joint-range">Arms</span>
+            </div>
+            <div class="joint-card">
+              <span class="joint-label">R. ELBOW</span>
+              <strong id="angleRightElbow" class="joint-value">--°</strong>
+              <span class="joint-range">Arms</span>
+            </div>
+            <div class="joint-card">
+              <span class="joint-label">L. KNEE</span>
+              <strong id="angleLeftKnee" class="joint-value">--°</strong>
+              <span class="joint-range">Legs</span>
+            </div>
+            <div class="joint-card">
+              <span class="joint-label">R. KNEE</span>
+              <strong id="angleRightKnee" class="joint-value">--°</strong>
+              <span class="joint-range">Legs</span>
+            </div>
+            <div class="joint-card">
+              <span class="joint-label">L. HIP</span>
+              <strong id="angleLeftHip" class="joint-value">--°</strong>
+              <span class="joint-range">Core</span>
+            </div>
+            <div class="joint-card">
+              <span class="joint-label">R. HIP</span>
+              <strong id="angleRightHip" class="joint-value">--°</strong>
+              <span class="joint-range">Core</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Real-Time Coach Notes -->
+        <div class="telemetry-panel panel-surface">
+          <div class="panel-header">
+            <h3>AI Form Coach</h3>
+            <span class="panel-pill live">LIVE</span>
+          </div>
+          <div class="coach-notes-box">
+            <p id="coachNoteText">Position your body clearly in frame to track movement.</p>
+          </div>
+        </div>
+
+        <!-- 4. Threshold Settings -->
+        <div class="telemetry-panel panel-surface">
+          <div class="panel-header">
+            <h3>AI Detection Parameters</h3>
+          </div>
+
+          <div class="slider-controls-group">
+            <div class="slider-field">
+              <div class="slider-top">
+                <label for="sliderDetect">Keypoint Detection Threshold</label>
+                <span id="valDetectText" class="slider-num">0.50</span>
+              </div>
+              <input id="sliderDetect" class="custom-range" type="range" min="0.10" max="1.00" step="0.05" value="0.50">
+            </div>
+
+            <div class="slider-field">
+              <div class="slider-top">
+                <label for="sliderTrack">Pose Tracking Threshold</label>
+                <span id="valTrackText" class="slider-num">0.50</span>
+              </div>
+              <input id="sliderTrack" class="custom-range" type="range" min="0.10" max="1.00" step="0.05" value="0.50">
+            </div>
+
+            <div class="slider-field">
+              <div class="slider-top">
+                <label for="sliderClassify">Activity Confidence Threshold</label>
+                <span id="valClassifyText" class="slider-num">0.50</span>
+              </div>
+              <input id="sliderClassify" class="custom-range" type="range" min="0.10" max="1.00" step="0.05" value="0.50">
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
   </main>
 
-  <footer>
-    <p>Form Coach AI — OpenCV & YOLO Biomechanics Engine</p>
+  <footer class="app-footer">
+    <p>PulseAI — Real-Time Exercise Recognition, Rep Counter & Posture Coach Engine</p>
   </footer>
 
   <script src="/app.js" defer></script>
