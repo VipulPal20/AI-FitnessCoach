@@ -258,8 +258,10 @@ async function verifyHealth() {
     if (res.ok && data.status === 'ok') {
       DOM.aiStatusText.textContent = 'Vision AI Active';
       DOM.aiStatusPill.style.color = 'var(--accent-emerald)';
-      if (data.total_exercises && DOM.libraryCountBadge) {
-        DOM.libraryCountBadge.textContent = Number(data.total_exercises).toLocaleString();
+      if (data.total_exercises) {
+        if (DOM.libraryCountBadge) DOM.libraryCountBadge.textContent = Number(data.total_exercises).toLocaleString();
+        const navBadge = document.querySelector('#navLibraryCountBadge');
+        if (navBadge) navBadge.textContent = Number(data.total_exercises).toLocaleString();
       }
     } else {
       DOM.aiStatusText.textContent = 'Degraded';
@@ -1022,6 +1024,45 @@ function attachLibraryEvents() {
       DOM.formGuidePiP.hidden = true;
     }
   });
+
+  // Top Nav Library Button
+  const navLibBtn = document.querySelector('#navLibraryBtn');
+  if (navLibBtn) {
+    navLibBtn.addEventListener('click', () => {
+      setMode('library');
+      const studioSec = document.querySelector('#studio-section');
+      if (studioSec) studioSec.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
+  // Smooth Scroll-Spy for Header Navigation Pills
+  initScrollSpy();
+}
+
+function initScrollSpy() {
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.header-nav .nav-pill:not(.library-pill)');
+  if (!sections.length || !navLinks.length) return;
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    const scrollPos = window.scrollY + 140;
+
+    sections.forEach(sec => {
+      const top = sec.offsetTop;
+      const height = sec.offsetHeight;
+      if (scrollPos >= top && scrollPos < top + height) {
+        current = sec.getAttribute('id');
+      }
+    });
+
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === `#${current}`) {
+        link.classList.add('active');
+      }
+    });
+  }, { passive: true });
 }
 
 async function initExerciseLibrary() {

@@ -5,134 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FitnessCoach — AI Based Fitness Evaluator & Trainer</title>
   <link rel="icon" type="image/svg+xml" href="/assets/fitnesscoach-logo.svg">
-  <!-- Google Fonts -->
+  <!-- Google Fonts: Luxury typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <div class="ambient-glow"></div>
 
-  <!-- App Header -->
+  <!-- App Header / Navigation Bar -->
   <header class="app-header">
     <div class="header-left">
-      <a href="/" class="brand-badge" title="FitnessCoach — AI based Fitness evaluator and trainer" style="text-decoration:none;">
+      <a href="/" class="brand-badge" title="FitnessCoach — AI based Fitness evaluator and trainer">
         <img src="/assets/fitnesscoach-logo.svg" alt="FitnessCoach — AI based Fitness evaluator and trainer" class="header-logo">
       </a>
+    </div>
 
-      <div class="session-stat-pill">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span class="stat-label">SESSION:</span>
+    <!-- Smooth Navigation Links -->
+    <nav class="header-nav">
+      <a href="#studio-section" class="nav-pill active">Studio</a>
+      <a href="#routine-section" class="nav-pill">Routine</a>
+      <a href="#kinematics-section" class="nav-pill">Biometrics</a>
+      <button id="navLibraryBtn" class="nav-pill library-pill" type="button">
+        <span>1,324+ Library</span>
+        <span class="nav-count" id="navLibraryCountBadge">1324</span>
+      </button>
+    </nav>
+
+    <!-- Header Stats & Actions -->
+    <div class="header-right">
+      <div class="session-stat-pill" title="Current session elapsed time">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="stat-label">TIME</span>
         <span id="sessionTimer" class="stat-value">00:00</span>
       </div>
 
-      <div class="session-stat-pill">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        <span class="stat-label">CALORIES:</span>
+      <div class="session-stat-pill" title="Estimated calories burned">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span class="stat-label">BURN</span>
         <span id="estCalories" class="stat-value">0 kcal</span>
       </div>
-    </div>
 
-    <div class="header-right">
       <div id="aiStatusPill" class="status-indicator-pill">
         <span class="status-dot"></span>
         <span id="aiStatusText">AI Ready</span>
       </div>
 
       <button id="resetWorkoutBtn" class="action-btn" type="button" title="Reset current session & counters">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        <span>Reset Workout</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <span>Reset</span>
       </button>
     </div>
   </header>
 
+  <!-- Main Scrollable Application Container -->
   <main class="main-container">
-    <!-- Top 3 Exercise Trackers Row -->
-    <section class="exercise-cards-strip">
-      <!-- 1. Bicep Curls Card -->
-      <div id="cardCurl" class="workout-card">
-        <div class="card-top">
-          <div class="exercise-icon-badge curl">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-          </div>
-          <div class="exercise-meta">
-            <span class="exercise-title">BICEP CURLS</span>
-            <span class="exercise-target">Goal: 12 reps</span>
-          </div>
-          <span id="curlStageBadge" class="phase-chip">REST</span>
-        </div>
-        <div class="card-bottom">
-          <div class="rep-display">
-            <span id="curlCount" class="rep-number">0</span>
-            <span class="rep-unit">REPS</span>
-          </div>
-          <div class="progress-track">
-            <div id="curlProgressBar" class="progress-fill curl" style="width: 0%;"></div>
-          </div>
-        </div>
-      </div>
 
-      <!-- 2. Shoulder Press Card -->
-      <div id="cardPress" class="workout-card">
-        <div class="card-top">
-          <div class="exercise-icon-badge press">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M6 10l6-2 6 2"/><path d="M12 8v8"/><path d="M8 22l4-6 4 6"/><path d="M6 10v6"/><path d="M18 10v6"/></svg>
-          </div>
-          <div class="exercise-meta">
-            <span class="exercise-title">SHOULDER PRESS</span>
-            <span class="exercise-target">Goal: 10 reps</span>
-          </div>
-          <span id="pressStageBadge" class="phase-chip">REST</span>
-        </div>
-        <div class="card-bottom">
-          <div class="rep-display">
-            <span id="pressCount" class="rep-number">0</span>
-            <span class="rep-unit">REPS</span>
-          </div>
-          <div class="progress-track">
-            <div id="pressProgressBar" class="progress-fill press" style="width: 0%;"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. Squats Card -->
-      <div id="cardSquat" class="workout-card">
-        <div class="card-top">
-          <div class="exercise-icon-badge squat">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><path d="M6 22l4-8 2 2 4-5"/><path d="M12 10v4"/></svg>
-          </div>
-          <div class="exercise-meta">
-            <span class="exercise-title">SQUATS</span>
-            <span class="exercise-target">Goal: 15 reps</span>
-          </div>
-          <span id="squatStageBadge" class="phase-chip">REST</span>
-        </div>
-        <div class="card-bottom">
-          <div class="rep-display">
-            <span id="squatCount" class="rep-number">0</span>
-            <span class="rep-unit">REPS</span>
-          </div>
-          <div class="progress-track">
-            <div id="squatProgressBar" class="progress-fill squat" style="width: 0%;"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Main Workout Hub -->
-    <div class="hub-grid">
-      <!-- Left: Workout Arena / Camera Viewport -->
-      <section class="arena-section panel-surface">
+    <!-- ═════════════════════════════════════════════════════════════════════
+         SECTION 1: CINEMATIC STUDIO / WORKOUT ARENA
+         ═════════════════════════════════════════════════════════════════════ -->
+    <section id="studio-section" class="studio-section">
+      <div class="arena-section panel-surface">
         <div class="arena-toolbar">
           <div class="mode-tabs">
             <button id="tabLiveMode" class="mode-tab active" type="button">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-              Live Webcam
+              Live Camera Studio
             </button>
             <button id="tabUploadMode" class="mode-tab" type="button">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Upload Photo / Video
+              Upload Video / Photo
             </button>
             <button id="tabLibraryMode" class="mode-tab" type="button">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -189,14 +132,14 @@
               <img id="pipExerciseGif" src="" alt="Form demonstration">
             </div>
 
-            <!-- On-Screen Smart HUD -->
+            <!-- On-Screen Floating Smart HUD Pills -->
             <div id="actionBadgeHUD" class="hud-pill" hidden>
               <span class="hud-pulse"></span>
               <span id="actionHUDText">EXERCISE RECOGNIZING...</span>
             </div>
 
             <div id="stageBadgeHUD" class="hud-stage-pill" hidden>
-              <span class="stage-label">STAGE:</span>
+              <span class="stage-label">STAGE</span>
               <strong id="stageHUDText">UP</strong>
             </div>
 
@@ -207,23 +150,23 @@
               </div>
             </div>
 
-            <!-- Start Prompt Overlay -->
+            <!-- Camera Start Prompt Overlay -->
             <div id="cameraStartPrompt" class="camera-welcome-overlay">
               <div class="welcome-box">
                 <div class="welcome-icon">
-                  <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                 </div>
-                <h2>Live Vision Workout</h2>
-                <p id="cameraPromptSubtitle">Turn on your camera to start real-time exercise classification, angle tracking & rep counting.</p>
+                <h2>Live Motion Studio</h2>
+                <p id="cameraPromptSubtitle">Activate your camera for real-time exercise classification, joint angle analysis, and rep counting.</p>
                 
                 <div class="prompt-btn-group">
                   <button id="startCameraBtn" class="btn-glow-primary" type="button">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    Start Camera
+                    <span>Launch Camera</span>
                   </button>
                   <button id="goToUploadBtn" class="btn-subtle" type="button">
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    Or Upload File
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/></svg>
+                    <span>Upload Media</span>
                   </button>
                 </div>
 
@@ -263,10 +206,10 @@
             <input id="filePicker" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/ogg,video/quicktime" hidden>
             <div class="drop-zone-inner">
               <div class="drop-icon">
-                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               </div>
-              <h3>Drag & drop your workout photo or video</h3>
-              <p>Supports JPG, PNG, WEBP, MP4, WEBM with real-time pose extraction & tracking</p>
+              <h3>Drag & Drop Your Workout Video or Photo</h3>
+              <p>Supports MP4, WEBM, MOV, JPG, PNG with real-time pose extraction & repetition analytics</p>
               
               <div class="upload-btn-row">
                 <button id="browseFileBtn" class="btn-glow-primary" type="button">Select Media File</button>
@@ -274,7 +217,7 @@
 
               <!-- 1-Click Sample Previews -->
               <div class="sample-pills-row">
-                <span>Or test instant samples:</span>
+                <span>Instant Demos:</span>
                 <button id="sampleSquatBtn" class="sample-chip" type="button">⚡ Squat Sample</button>
                 <button id="samplePressBtn" class="sample-chip" type="button">⚡ Shoulder Press Sample</button>
               </div>
@@ -288,18 +231,18 @@
             <canvas id="uploadCanvas"></canvas>
 
             <div class="upload-stage-actions">
-              <button id="changeFileBtn" class="btn-subtle" type="button">Upload Different File</button>
+              <button id="changeFileBtn" class="btn-subtle" type="button">Choose Different File</button>
             </div>
           </div>
         </div>
 
-        <!-- Mode 3: Exercise Library Browser -->
+        <!-- Mode 3: Exercise Library Browser (Inside Studio) -->
         <div id="libraryArena" class="viewport-box library-viewport" hidden>
           <!-- Library Search & Filters -->
           <div class="library-toolbar">
             <div class="library-search-box">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input id="librarySearchInput" type="text" placeholder="Search 1,324+ exercises..." autocomplete="off">
+              <input id="librarySearchInput" type="text" placeholder="Search across 1,324+ exercises, muscle groups, equipment..." autocomplete="off">
             </div>
             <div class="library-filters">
               <select id="filterCategory" class="filter-select">
@@ -313,12 +256,12 @@
               </select>
               <label class="filter-toggle-chip">
                 <input id="filterRepCounting" type="checkbox">
-                <span>Rep Counting Only</span>
+                <span>AI Reps Only</span>
               </label>
             </div>
           </div>
 
-          <!-- Library Results -->
+          <!-- Library Results Header -->
           <div class="library-results-header">
             <span id="libraryResultsCount">Loading exercises...</span>
             <div class="library-pagination">
@@ -329,61 +272,117 @@
           </div>
 
           <div id="libraryGrid" class="library-exercise-grid">
-            <!-- Exercise cards rendered by JS -->
+            <!-- Exercise cards rendered dynamically by JS -->
           </div>
         </div>
+      </div>
+    </section>
 
-        <!-- Exercise Detail Modal -->
-        <div id="exerciseDetailModal" class="exercise-modal-backdrop" hidden>
-          <div class="exercise-modal-content">
-            <button id="closeExerciseModal" class="modal-close-btn" type="button">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-            <div class="modal-body">
-              <div class="modal-media">
-                <img id="modalExerciseGif" src="" alt="Exercise animation">
-              </div>
-              <div class="modal-info">
-                <h2 id="modalExerciseName">Exercise Name</h2>
-                <div class="modal-badges">
-                  <span id="modalCategory" class="detail-badge category"></span>
-                  <span id="modalEquipment" class="detail-badge equipment"></span>
-                  <span id="modalTarget" class="detail-badge target"></span>
-                  <span id="modalRepSupport" class="detail-badge rep-support"></span>
-                </div>
-                <div class="modal-muscles">
-                  <strong>Target Muscle:</strong> <span id="modalTargetMuscle"></span><br>
-                  <strong>Muscle Group:</strong> <span id="modalMuscleGroup"></span><br>
-                  <strong>Secondary:</strong> <span id="modalSecondary"></span>
-                </div>
-                <div class="modal-instructions">
-                  <h3>Instructions</h3>
-                  <div id="modalInstructions" class="instruction-text"></div>
-                </div>
+    <!-- ═════════════════════════════════════════════════════════════════════
+         SECTION 2: ACTIVE ROUTINE & REPETITION GOALS
+         ═════════════════════════════════════════════════════════════════════ -->
+    <section id="routine-section" class="page-section">
+      <div class="section-header-block">
+        <div class="section-title-wrap">
+          <span class="section-eyebrow">DAILY TARGETS</span>
+          <h2 class="section-title">Active Routine & Progress</h2>
+        </div>
+        <p class="section-desc">Automated rep counting with stage-machine transition heuristics</p>
+      </div>
 
-                <div class="modal-actions">
-                  <button id="btnStartWorkoutExercise" class="btn-train-now" type="button">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    <span>Train This Exercise Live</span>
-                  </button>
-                  <button id="btnUploadExercise" class="btn-train-upload" type="button">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <span>Test Video</span>
-                  </button>
-                </div>
-              </div>
+      <div class="exercise-cards-strip">
+        <!-- 1. Bicep Curls Card -->
+        <div id="cardCurl" class="workout-card">
+          <div class="card-top">
+            <div class="exercise-icon-badge curl">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+            </div>
+            <div class="exercise-meta">
+              <span class="exercise-title">BICEP CURLS</span>
+              <span class="exercise-target">Goal: 12 reps</span>
+            </div>
+            <span id="curlStageBadge" class="phase-chip">REST</span>
+          </div>
+          <div class="card-bottom">
+            <div class="rep-display">
+              <span id="curlCount" class="rep-number">0</span>
+              <span class="rep-unit">REPS</span>
+            </div>
+            <div class="progress-track">
+              <div id="curlProgressBar" class="progress-fill curl" style="width: 0%;"></div>
             </div>
           </div>
         </div>
-      </section>
 
-      <!-- Right: AI Telemetry, Kinematics & Settings -->
-      <aside class="sidebar-telemetry">
-        <!-- 1. Real-Time Neural Classification Confidence -->
+        <!-- 2. Shoulder Press Card -->
+        <div id="cardPress" class="workout-card">
+          <div class="card-top">
+            <div class="exercise-icon-badge press">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M6 10l6-2 6 2"/><path d="M12 8v8"/><path d="M8 22l4-6 4 6"/><path d="M6 10v6"/><path d="M18 10v6"/></svg>
+            </div>
+            <div class="exercise-meta">
+              <span class="exercise-title">SHOULDER PRESS</span>
+              <span class="exercise-target">Goal: 10 reps</span>
+            </div>
+            <span id="pressStageBadge" class="phase-chip">REST</span>
+          </div>
+          <div class="card-bottom">
+            <div class="rep-display">
+              <span id="pressCount" class="rep-number">0</span>
+              <span class="rep-unit">REPS</span>
+            </div>
+            <div class="progress-track">
+              <div id="pressProgressBar" class="progress-fill press" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Squats Card -->
+        <div id="cardSquat" class="workout-card">
+          <div class="card-top">
+            <div class="exercise-icon-badge squat">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><path d="M6 22l4-8 2 2 4-5"/><path d="M12 10v4"/></svg>
+            </div>
+            <div class="exercise-meta">
+              <span class="exercise-title">SQUATS</span>
+              <span class="exercise-target">Goal: 15 reps</span>
+            </div>
+            <span id="squatStageBadge" class="phase-chip">REST</span>
+          </div>
+          <div class="card-bottom">
+            <div class="rep-display">
+              <span id="squatCount" class="rep-number">0</span>
+              <span class="rep-unit">REPS</span>
+            </div>
+            <div class="progress-track">
+              <div id="squatProgressBar" class="progress-fill squat" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════════
+         SECTION 3: BIOMECHANICAL KINEMATICS & AI FORM COACH
+         ═════════════════════════════════════════════════════════════════════ -->
+    <section id="kinematics-section" class="page-section">
+      <div class="section-header-block">
+        <div class="section-title-wrap">
+          <span class="section-eyebrow">INTELLIGENCE & FORM</span>
+          <h2 class="section-title">Biomechanical Form & Telemetry</h2>
+        </div>
+        <p class="section-desc">Real-time 33-point pose keypoints, joint angles, and automated coaching cues</p>
+      </div>
+
+      <div class="kinematics-dashboard-grid">
+        <!-- 1. Neural Classification Confidence Card -->
         <div class="telemetry-panel panel-surface">
           <div class="panel-header">
-            <h3>Recognition Confidence</h3>
-            <span class="panel-pill">Attention-LSTM</span>
+            <div>
+              <h3>Movement Classifier</h3>
+              <p class="panel-subtext">Attention-LSTM confidence scores</p>
+            </div>
+            <span class="panel-pill">Spatial-Temporal</span>
           </div>
 
           <div class="probability-bars-group">
@@ -422,10 +421,13 @@
           </div>
         </div>
 
-        <!-- 2. Kinematic Joint Angles -->
+        <!-- 2. Kinematic Joint Angles Card -->
         <div class="telemetry-panel panel-surface">
           <div class="panel-header">
-            <h3>Joint Angle Telemetry</h3>
+            <div>
+              <h3>Joint Mobility & Angles</h3>
+              <p class="panel-subtext">Live 3D angular measurements</p>
+            </div>
             <span class="panel-pill">Kinematics</span>
           </div>
 
@@ -433,85 +435,156 @@
             <div class="joint-card">
               <span class="joint-label">L. ELBOW</span>
               <strong id="angleLeftElbow" class="joint-value">--°</strong>
-              <span class="joint-range">Arms</span>
+              <span class="joint-range">Upper Arm</span>
             </div>
             <div class="joint-card">
               <span class="joint-label">R. ELBOW</span>
               <strong id="angleRightElbow" class="joint-value">--°</strong>
-              <span class="joint-range">Arms</span>
+              <span class="joint-range">Upper Arm</span>
             </div>
             <div class="joint-card">
               <span class="joint-label">L. KNEE</span>
               <strong id="angleLeftKnee" class="joint-value">--°</strong>
-              <span class="joint-range">Legs</span>
+              <span class="joint-range">Lower Body</span>
             </div>
             <div class="joint-card">
               <span class="joint-label">R. KNEE</span>
               <strong id="angleRightKnee" class="joint-value">--°</strong>
-              <span class="joint-range">Legs</span>
+              <span class="joint-range">Lower Body</span>
             </div>
             <div class="joint-card">
               <span class="joint-label">L. HIP</span>
               <strong id="angleLeftHip" class="joint-value">--°</strong>
-              <span class="joint-range">Core</span>
+              <span class="joint-range">Core & Pelvis</span>
             </div>
             <div class="joint-card">
               <span class="joint-label">R. HIP</span>
               <strong id="angleRightHip" class="joint-value">--°</strong>
-              <span class="joint-range">Core</span>
+              <span class="joint-range">Core & Pelvis</span>
             </div>
           </div>
         </div>
 
-        <!-- 3. Real-Time Coach Notes -->
-        <div class="telemetry-panel panel-surface">
+        <!-- 3. Real-Time AI Coach Card -->
+        <div class="telemetry-panel panel-surface coach-panel">
           <div class="panel-header">
-            <h3>AI Form Coach</h3>
+            <div>
+              <h3>AI Form Coach</h3>
+              <p class="panel-subtext">Instant posture guidance</p>
+            </div>
             <span class="panel-pill live">LIVE</span>
           </div>
           <div class="coach-notes-box">
-            <p id="coachNoteText">Position your body clearly in frame to track movement.</p>
+            <div class="coach-avatar">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93V14h-1.5v-4.07A4 4 0 0 1 8 6a4 4 0 0 1 4-4z"/><circle cx="12" cy="18" r="1.5"/></svg>
+            </div>
+            <p id="coachNoteText">Position your body clearly in frame to track movement and maintain optimal form.</p>
           </div>
         </div>
+      </div>
+    </section>
 
-        <!-- 4. Threshold Settings -->
-        <div class="telemetry-panel panel-surface">
-          <div class="panel-header">
-            <h3>AI Detection Parameters</h3>
+    <!-- ═════════════════════════════════════════════════════════════════════
+         SECTION 4: ADVANCED AI PARAMETERS (COLLAPSIBLE DRAWER)
+         ═════════════════════════════════════════════════════════════════════ -->
+    <section id="settings-section" class="page-section settings-section">
+      <details class="calibration-drawer panel-surface">
+        <summary class="drawer-summary">
+          <div class="drawer-summary-left">
+            <div class="drawer-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </div>
+            <strong>Advanced AI Vision Calibration & Thresholds</strong>
+            <span class="drawer-pill">Model Tuning</span>
+          </div>
+          <span class="drawer-chevron">▾</span>
+        </summary>
+
+        <div class="slider-controls-group">
+          <div class="slider-field">
+            <div class="slider-top">
+              <label for="sliderDetect">Keypoint Detection Threshold</label>
+              <span id="valDetectText" class="slider-num">0.50</span>
+            </div>
+            <input id="sliderDetect" class="custom-range" type="range" min="0.10" max="1.00" step="0.05" value="0.50">
           </div>
 
-          <div class="slider-controls-group">
-            <div class="slider-field">
-              <div class="slider-top">
-                <label for="sliderDetect">Keypoint Detection Threshold</label>
-                <span id="valDetectText" class="slider-num">0.50</span>
-              </div>
-              <input id="sliderDetect" class="custom-range" type="range" min="0.10" max="1.00" step="0.05" value="0.50">
+          <div class="slider-field">
+            <div class="slider-top">
+              <label for="sliderTrack">Pose Tracking Threshold</label>
+              <span id="valTrackText" class="slider-num">0.50</span>
+            </div>
+            <input id="sliderTrack" class="custom-range" type="range" min="0.10" max="1.00" step="0.05" value="0.50">
+          </div>
+
+          <div class="slider-field">
+            <div class="slider-top">
+              <label for="sliderClassify">Activity Confidence Threshold</label>
+              <span id="valClassifyText" class="slider-num">0.50</span>
+            </div>
+            <input id="sliderClassify" class="custom-range" type="range" min="0.10" max="1.00" step="0.05" value="0.50">
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ═════════════════════════════════════════════════════════════════════
+         EXERCISE DETAIL MODAL
+         ═════════════════════════════════════════════════════════════════════ -->
+    <div id="exerciseDetailModal" class="exercise-modal-backdrop" hidden>
+      <div class="exercise-modal-content">
+        <button id="closeExerciseModal" class="modal-close-btn" type="button" title="Close modal">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="modal-body">
+          <div class="modal-media">
+            <img id="modalExerciseGif" src="" alt="Exercise animation">
+          </div>
+          <div class="modal-info">
+            <h2 id="modalExerciseName">Exercise Name</h2>
+            <div class="modal-badges">
+              <span id="modalCategory" class="detail-badge category"></span>
+              <span id="modalEquipment" class="detail-badge equipment"></span>
+              <span id="modalTarget" class="detail-badge target"></span>
+              <span id="modalRepSupport" class="detail-badge rep-support"></span>
+            </div>
+            <div class="modal-muscles">
+              <strong>Target Muscle:</strong> <span id="modalTargetMuscle"></span><br>
+              <strong>Muscle Group:</strong> <span id="modalMuscleGroup"></span><br>
+              <strong>Secondary:</strong> <span id="modalSecondary"></span>
+            </div>
+            <div class="modal-instructions">
+              <h3>Instructions</h3>
+              <div id="modalInstructions" class="instruction-text"></div>
             </div>
 
-            <div class="slider-field">
-              <div class="slider-top">
-                <label for="sliderTrack">Pose Tracking Threshold</label>
-                <span id="valTrackText" class="slider-num">0.50</span>
-              </div>
-              <input id="sliderTrack" class="custom-range" type="range" min="0.10" max="1.00" step="0.05" value="0.50">
-            </div>
-
-            <div class="slider-field">
-              <div class="slider-top">
-                <label for="sliderClassify">Activity Confidence Threshold</label>
-                <span id="valClassifyText" class="slider-num">0.50</span>
-              </div>
-              <input id="sliderClassify" class="custom-range" type="range" min="0.10" max="1.00" step="0.05" value="0.50">
+            <div class="modal-actions">
+              <button id="btnStartWorkoutExercise" class="btn-train-now" type="button">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span>Train This Exercise Live</span>
+              </button>
+              <button id="btnUploadExercise" class="btn-train-upload" type="button">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/></svg>
+                <span>Test Video</span>
+              </button>
             </div>
           </div>
         </div>
-      </aside>
+      </div>
     </div>
   </main>
 
+  <!-- App Footer -->
   <footer class="app-footer">
-    <p>FitnessCoach — AI Based Fitness Evaluator and Trainer • © 2026 Vipul Pal • Released under MIT License</p>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="/assets/fitnesscoach-logo.svg" alt="FitnessCoach Logo" height="34">
+        <p>FitnessCoach — AI Based Fitness Evaluator and Real-Time Exercise Trainer Engine</p>
+      </div>
+      <div class="footer-meta">
+        <p>© 2026 Vipul Pal • Released under <a href="/LICENSE" target="_blank">MIT License</a></p>
+      </div>
+    </div>
   </footer>
 
   <script src="/app.js" defer></script>
