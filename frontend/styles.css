@@ -418,6 +418,312 @@ body {
   accent-color: var(--accent-cyan);
 }
 
+/* ── Studio Workspace Layout (Camera Screen + Live Insights Beside It) ────── */
+.studio-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.studio-workspace.library-mode {
+  grid-template-columns: 1fr;
+}
+
+.stage-container {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.studio-live-insights {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.studio-workspace.library-mode .studio-live-insights {
+  display: none !important;
+}
+
+/* Studio Insight Card (Glassmorphic Telemetry Pod) */
+.studio-insight-card {
+  background: var(--bg-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.studio-insight-card:hover {
+  border-color: var(--border-medium);
+}
+
+.studio-insight-card.live-rep-counter-card {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(9, 14, 24, 0.85) 100%);
+  border-color: rgba(6, 182, 212, 0.28);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(6, 182, 212, 0.2);
+}
+
+.insight-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.insight-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+
+.phase-chip {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 9px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.phase-chip.up {
+  background: rgba(16, 185, 129, 0.16);
+  color: var(--accent-emerald);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.phase-chip.down {
+  background: rgba(6, 182, 212, 0.16);
+  color: var(--accent-cyan);
+  border-color: rgba(6, 182, 212, 0.35);
+}
+
+.studio-action-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent-cyan-light);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.studio-rep-big-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 2px 0;
+}
+
+.studio-rep-number {
+  font-size: 54px;
+  font-weight: 900;
+  font-family: var(--font-mono);
+  line-height: 0.95;
+  color: #fff;
+  letter-spacing: -0.03em;
+  text-shadow: 0 0 24px rgba(6, 182, 212, 0.45);
+}
+
+.studio-rep-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.studio-rep-unit {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.studio-rep-goal {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-full);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-fill.curl { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+.progress-fill.press { background: linear-gradient(90deg, #f97316, #f59e0b); }
+.progress-fill.squat { background: linear-gradient(90deg, #10b981, #34d399); }
+
+/* Form Coach Live Cue Card */
+.studio-coach-card {
+  border-color: rgba(16, 185, 129, 0.25);
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.04) 0%, rgba(15, 20, 30, 0.75) 100%);
+}
+
+.live-pulse-badge {
+  font-size: 9px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-emerald);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.live-pulse-badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-emerald);
+  box-shadow: 0 0 6px var(--accent-emerald);
+  animation: pulseDot 1.4s infinite ease-in-out;
+}
+
+.studio-coach-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(6, 182, 212, 0.05);
+  border: 1px solid rgba(6, 182, 212, 0.18);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.studio-coach-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(6, 182, 212, 0.15);
+  color: var(--accent-cyan);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+#studioCoachNoteText {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Joint Mobility Angles Grid */
+.studio-angles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.studio-angle-item {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 7px 4px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.studio-angle-item:hover {
+  border-color: var(--border-medium);
+}
+
+.angle-sub {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+}
+
+.angle-val {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--accent-emerald-light);
+  margin-top: 2px;
+}
+
+/* Confidence Mini Visualizer */
+.studio-confidence-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.conf-item {
+  display: grid;
+  grid-template-columns: 44px 1fr 32px;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.conf-name {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.conf-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.2s ease-out;
+}
+
+.meter-fill.curl { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+.meter-fill.press { background: linear-gradient(90deg, #f97316, #f59e0b); }
+.meter-fill.squat { background: linear-gradient(90deg, #10b981, #34d399); }
+
+.conf-pct {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-align: right;
+  font-weight: 700;
+}
+
 /* Video Stage (Cinema Grade Viewport) */
 .viewport-box {
   display: flex;
@@ -506,6 +812,61 @@ body {
 .hud-stage-pill strong {
   color: var(--accent-emerald);
   font-weight: 800;
+}
+
+/* On-Screen Floating AI Form Coach Pill */
+.hud-coach-pill {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 88%;
+  padding: 8px 18px;
+  background: rgba(9, 14, 24, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(6, 182, 212, 0.45);
+  border-radius: var(--radius-full);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(6, 182, 212, 0.2);
+  pointer-events: none;
+  animation: coachFadeIn 0.25s ease-out;
+}
+
+.hud-coach-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-emerald);
+  box-shadow: 0 0 8px var(--accent-emerald);
+  animation: pulseDot 1.4s infinite ease-in-out;
+  flex-shrink: 0;
+}
+
+.hud-coach-tag {
+  font-size: 10px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+}
+
+#coachFloatingHUDText {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes coachFadeIn {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 /* Rep Pop Animation Modal */
@@ -1835,6 +2196,12 @@ body {
 }
 
 /* Responsive Overhauls */
+@media (max-width: 1080px) {
+  .studio-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 900px) {
   .header-nav { display: none; }
   .modal-body { flex-direction: column; }

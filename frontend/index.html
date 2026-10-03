@@ -100,8 +100,11 @@
           </div>
         </div>
 
-        <!-- Mode 1: Live Webcam Arena -->
-        <div id="liveArena" class="viewport-box">
+        <!-- Studio Workspace (Stage + Live Insights Cockpit Right There on Screen) -->
+        <div class="studio-workspace">
+          <div class="stage-container">
+            <!-- Mode 1: Live Webcam Arena -->
+            <div id="liveArena" class="viewport-box">
           <div class="video-stage">
             <video id="webcamVideo" autoplay playsinline muted></video>
             <canvas id="liveCanvas"></canvas>
@@ -141,6 +144,13 @@
             <div id="stageBadgeHUD" class="hud-stage-pill" hidden>
               <span class="stage-label">STAGE</span>
               <strong id="stageHUDText">UP</strong>
+            </div>
+
+            <!-- On-Screen Floating AI Form Coach Feedback Pill -->
+            <div id="coachFloatingHUD" class="hud-coach-pill" hidden>
+              <div class="hud-coach-dot"></div>
+              <span class="hud-coach-tag">FORM COACH</span>
+              <span id="coachFloatingHUDText">Keep full body in frame</span>
             </div>
 
             <div id="repAnimationOverlay" class="rep-pop-modal" hidden>
@@ -275,6 +285,102 @@
             <!-- Exercise cards rendered dynamically by JS -->
           </div>
         </div>
+      </div>
+
+      <!-- Right: Live Studio Insights Cockpit ("Right There" on Screen!) -->
+      <aside id="studioLiveInsights" class="studio-live-insights">
+          <!-- 1. Real-Time Big Rep Counter & Stage -->
+          <div class="studio-insight-card live-rep-counter-card">
+            <div class="insight-card-header">
+              <span class="insight-label">CURRENT EXERCISE</span>
+              <span id="studioPhaseBadge" class="phase-chip">REST</span>
+            </div>
+            <div class="studio-action-name" id="studioActionName">READY TO TRAIN</div>
+            <div class="studio-rep-big-row">
+              <span class="studio-rep-number" id="studioBigRepCount">0</span>
+              <div class="studio-rep-meta">
+                <span class="studio-rep-unit">REPS</span>
+                <span class="studio-rep-goal" id="studioRepGoal">Target: 12</span>
+              </div>
+            </div>
+            <div class="progress-track">
+              <div id="studioProgressBar" class="progress-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- 2. AI Form Coach Live Cue Box -->
+          <div class="studio-insight-card studio-coach-card">
+            <div class="insight-card-header">
+              <span class="insight-label">AI FORM COACH</span>
+              <span class="live-pulse-badge">LIVE CUES</span>
+            </div>
+            <div class="studio-coach-box">
+              <div class="studio-coach-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93V14h-1.5v-4.07A4 4 0 0 1 8 6a4 4 0 0 1 4-4z"/><circle cx="12" cy="18" r="1.5"/></svg>
+              </div>
+              <p id="studioCoachNoteText">Keep your full body in frame to track movement & posture.</p>
+            </div>
+          </div>
+
+          <!-- 3. Live Biomechanical Joint Mobility Angles -->
+          <div class="studio-insight-card">
+            <div class="insight-card-header">
+              <span class="insight-label">JOINT MOBILITY ANGLES</span>
+              <span class="panel-pill">Kinematics</span>
+            </div>
+            <div class="studio-angles-grid">
+              <div class="studio-angle-item">
+                <span class="angle-sub">L. ELBOW</span>
+                <strong id="studioAngleLeftElbow" class="angle-val">--°</strong>
+              </div>
+              <div class="studio-angle-item">
+                <span class="angle-sub">R. ELBOW</span>
+                <strong id="studioAngleRightElbow" class="angle-val">--°</strong>
+              </div>
+              <div class="studio-angle-item">
+                <span class="angle-sub">L. KNEE</span>
+                <strong id="studioAngleLeftKnee" class="angle-val">--°</strong>
+              </div>
+              <div class="studio-angle-item">
+                <span class="angle-sub">R. KNEE</span>
+                <strong id="studioAngleRightKnee" class="angle-val">--°</strong>
+              </div>
+              <div class="studio-angle-item">
+                <span class="angle-sub">L. HIP</span>
+                <strong id="studioAngleLeftHip" class="angle-val">--°</strong>
+              </div>
+              <div class="studio-angle-item">
+                <span class="angle-sub">R. HIP</span>
+                <strong id="studioAngleRightHip" class="angle-val">--°</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Recognition Confidence Mini Visualizer -->
+          <div class="studio-insight-card">
+            <div class="insight-card-header">
+              <span class="insight-label">MOTION CLASSIFIER</span>
+              <span class="panel-pill">Neural</span>
+            </div>
+            <div class="studio-confidence-mini">
+              <div class="conf-item">
+                <span class="conf-name">Curl</span>
+                <div class="conf-track"><div id="studioProbCurlBar" class="meter-fill curl" style="width: 0%;"></div></div>
+                <span id="studioProbCurlLabel" class="conf-pct">0%</span>
+              </div>
+              <div class="conf-item">
+                <span class="conf-name">Press</span>
+                <div class="conf-track"><div id="studioProbPressBar" class="meter-fill press" style="width: 0%;"></div></div>
+                <span id="studioProbPressLabel" class="conf-pct">0%</span>
+              </div>
+              <div class="conf-item">
+                <span class="conf-name">Squat</span>
+                <div class="conf-track"><div id="studioProbSquatBar" class="meter-fill squat" style="width: 0%;"></div></div>
+                <span id="studioProbSquatLabel" class="conf-pct">0%</span>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
 

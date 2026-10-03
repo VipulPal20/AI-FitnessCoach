@@ -180,6 +180,30 @@ const DOM = {
   // AI Coach Note
   coachNoteText: document.querySelector('#coachNoteText'),
 
+  // Studio Live Insights Cockpit (Right There with Screen)
+  studioWorkspace: document.querySelector('.studio-workspace'),
+  studioLiveInsights: document.querySelector('#studioLiveInsights'),
+  studioActionName: document.querySelector('#studioActionName'),
+  studioPhaseBadge: document.querySelector('#studioPhaseBadge'),
+  studioBigRepCount: document.querySelector('#studioBigRepCount'),
+  studioRepGoal: document.querySelector('#studioRepGoal'),
+  studioProgressBar: document.querySelector('#studioProgressBar'),
+  studioCoachNoteText: document.querySelector('#studioCoachNoteText'),
+  coachFloatingHUD: document.querySelector('#coachFloatingHUD'),
+  coachFloatingHUDText: document.querySelector('#coachFloatingHUDText'),
+  studioAngleLeftElbow: document.querySelector('#studioAngleLeftElbow'),
+  studioAngleRightElbow: document.querySelector('#studioAngleRightElbow'),
+  studioAngleLeftKnee: document.querySelector('#studioAngleLeftKnee'),
+  studioAngleRightKnee: document.querySelector('#studioAngleRightKnee'),
+  studioAngleLeftHip: document.querySelector('#studioAngleLeftHip'),
+  studioAngleRightHip: document.querySelector('#studioAngleRightHip'),
+  studioProbCurlBar: document.querySelector('#studioProbCurlBar'),
+  studioProbCurlLabel: document.querySelector('#studioProbCurlLabel'),
+  studioProbPressBar: document.querySelector('#studioProbPressBar'),
+  studioProbPressLabel: document.querySelector('#studioProbPressLabel'),
+  studioProbSquatBar: document.querySelector('#studioProbSquatBar'),
+  studioProbSquatLabel: document.querySelector('#studioProbSquatLabel'),
+
   // Sliders
   sliderDetect: document.querySelector('#sliderDetect'),
   valDetectText: document.querySelector('#valDetectText'),
@@ -340,6 +364,8 @@ function setMode(mode) {
     if (DOM.liveArena) DOM.liveArena.hidden = false;
     if (DOM.uploadArena) DOM.uploadArena.hidden = true;
     if (DOM.libraryArena) DOM.libraryArena.hidden = true;
+    if (DOM.studioWorkspace) DOM.studioWorkspace.classList.remove('library-mode');
+    if (DOM.studioLiveInsights) DOM.studioLiveInsights.hidden = false;
     stopVideoFilePlayback();
   } else if (mode === 'upload') {
     DOM.tabUploadMode?.classList.add('active');
@@ -348,6 +374,8 @@ function setMode(mode) {
     if (DOM.uploadArena) DOM.uploadArena.hidden = false;
     if (DOM.liveArena) DOM.liveArena.hidden = true;
     if (DOM.libraryArena) DOM.libraryArena.hidden = true;
+    if (DOM.studioWorkspace) DOM.studioWorkspace.classList.remove('library-mode');
+    if (DOM.studioLiveInsights) DOM.studioLiveInsights.hidden = false;
     stopWebcam();
   } else if (mode === 'library') {
     DOM.tabLibraryMode?.classList.add('active');
@@ -356,6 +384,8 @@ function setMode(mode) {
     if (DOM.libraryArena) DOM.libraryArena.hidden = false;
     if (DOM.liveArena) DOM.liveArena.hidden = true;
     if (DOM.uploadArena) DOM.uploadArena.hidden = true;
+    if (DOM.studioWorkspace) DOM.studioWorkspace.classList.add('library-mode');
+    if (DOM.studioLiveInsights) DOM.studioLiveInsights.hidden = true;
     stopWebcam();
     stopVideoFilePlayback();
     if (!state.library.initialized) {
@@ -639,7 +669,7 @@ function refreshWorkoutDashboard(data, canvas, visualSource, isMirrored) {
   const counters = data.counters || { curl: 0, press: 0, squat: 0 };
   const stages = data.stages || { curl: null, press: null, squat: null };
 
-  // 1. Update Rep Numbers & Goal Bars
+  // 1. Update Rep Numbers & Goal Bars (Section 2)
   DOM.curlCount.textContent = counters.curl;
   DOM.pressCount.textContent = counters.press;
   DOM.squatCount.textContent = counters.squat;
@@ -647,6 +677,34 @@ function refreshWorkoutDashboard(data, canvas, visualSource, isMirrored) {
   DOM.curlProgressBar.style.width = `${Math.min(100, (counters.curl / state.targets.curl) * 100)}%`;
   DOM.pressProgressBar.style.width = `${Math.min(100, (counters.press / state.targets.press) * 100)}%`;
   DOM.squatProgressBar.style.width = `${Math.min(100, (counters.squat / state.targets.squat) * 100)}%`;
+
+  // 1b. Update Studio Live Insights Cockpit (Right There Alongside Screen!)
+  const currentAction = data.current_action;
+  const currentRep = currentAction && counters[currentAction] !== undefined 
+    ? counters[currentAction] 
+    : (counters.curl + counters.press + counters.squat);
+  const currentTarget = currentAction && state.targets[currentAction] ? state.targets[currentAction] : 12;
+  const currentStage = currentAction ? stages[currentAction] : null;
+
+  if (DOM.studioActionName) {
+    const actionNames = { curl: 'BICEP CURLS', press: 'SHOULDER PRESS', squat: 'SQUATS' };
+    DOM.studioActionName.textContent = currentAction 
+      ? (actionNames[currentAction] || currentAction.toUpperCase()) 
+      : (state.selectedExercise ? state.selectedExercise.name.toUpperCase() : 'READY TO TRAIN');
+  }
+  if (DOM.studioBigRepCount) {
+    DOM.studioBigRepCount.textContent = currentRep;
+  }
+  if (DOM.studioRepGoal) {
+    DOM.studioRepGoal.textContent = `Target: ${currentTarget}`;
+  }
+  if (DOM.studioProgressBar) {
+    const pct = Math.min(100, Math.round((currentRep / currentTarget) * 100));
+    DOM.studioProgressBar.style.width = `${pct}%`;
+  }
+  if (DOM.studioPhaseBadge) {
+    setPhaseChip(DOM.studioPhaseBadge, currentStage);
+  }
 
   // 2. Stage Chips
   setPhaseChip(DOM.curlStageBadge, stages.curl);
@@ -685,7 +743,7 @@ function refreshWorkoutDashboard(data, canvas, visualSource, isMirrored) {
     DOM.stageBadgeHUD.hidden = true;
   }
 
-  // 7. Probability Progress Bars
+  // 7. Probability Progress Bars (Deep-dive + Studio Cockpit)
   const probs = data.probabilities || { curl: 0, press: 0, squat: 0 };
   const cPct = Math.round((probs.curl || 0) * 100);
   const pPct = Math.round((probs.press || 0) * 100);
@@ -698,16 +756,37 @@ function refreshWorkoutDashboard(data, canvas, visualSource, isMirrored) {
   DOM.probSquatLabel.textContent = `${sPct}%`;
   DOM.probSquatBar.style.width = `${sPct}%`;
 
-  // 8. Kinematic Angles
-  const angles = data.angles || {};
-  DOM.angleLeftElbow.textContent = angles.left_elbow !== undefined ? `${angles.left_elbow}°` : '--°';
-  DOM.angleRightElbow.textContent = angles.right_elbow !== undefined ? `${angles.right_elbow}°` : '--°';
-  DOM.angleLeftKnee.textContent = angles.left_knee !== undefined ? `${angles.left_knee}°` : '--°';
-  DOM.angleRightKnee.textContent = angles.right_knee !== undefined ? `${angles.right_knee}°` : '--°';
-  DOM.angleLeftHip.textContent = angles.left_hip !== undefined ? `${angles.left_hip}°` : '--°';
-  DOM.angleRightHip.textContent = angles.right_hip !== undefined ? `${angles.right_hip}°` : '--°';
+  if (DOM.studioProbCurlLabel) DOM.studioProbCurlLabel.textContent = `${cPct}%`;
+  if (DOM.studioProbCurlBar) DOM.studioProbCurlBar.style.width = `${cPct}%`;
+  if (DOM.studioProbPressLabel) DOM.studioProbPressLabel.textContent = `${pPct}%`;
+  if (DOM.studioProbPressBar) DOM.studioProbPressBar.style.width = `${pPct}%`;
+  if (DOM.studioProbSquatLabel) DOM.studioProbSquatLabel.textContent = `${sPct}%`;
+  if (DOM.studioProbSquatBar) DOM.studioProbSquatBar.style.width = `${sPct}%`;
 
-  // 9. Dynamic AI Coaching Notes
+  // 8. Kinematic Angles (Deep-dive + Studio Cockpit)
+  const angles = data.angles || {};
+  const lElbow = angles.left_elbow !== undefined ? `${angles.left_elbow}°` : '--°';
+  const rElbow = angles.right_elbow !== undefined ? `${angles.right_elbow}°` : '--°';
+  const lKnee = angles.left_knee !== undefined ? `${angles.left_knee}°` : '--°';
+  const rKnee = angles.right_knee !== undefined ? `${angles.right_knee}°` : '--°';
+  const lHip = angles.left_hip !== undefined ? `${angles.left_hip}°` : '--°';
+  const rHip = angles.right_hip !== undefined ? `${angles.right_hip}°` : '--°';
+
+  DOM.angleLeftElbow.textContent = lElbow;
+  DOM.angleRightElbow.textContent = rElbow;
+  DOM.angleLeftKnee.textContent = lKnee;
+  DOM.angleRightKnee.textContent = rKnee;
+  DOM.angleLeftHip.textContent = lHip;
+  DOM.angleRightHip.textContent = rHip;
+
+  if (DOM.studioAngleLeftElbow) DOM.studioAngleLeftElbow.textContent = lElbow;
+  if (DOM.studioAngleRightElbow) DOM.studioAngleRightElbow.textContent = rElbow;
+  if (DOM.studioAngleLeftKnee) DOM.studioAngleLeftKnee.textContent = lKnee;
+  if (DOM.studioAngleRightKnee) DOM.studioAngleRightKnee.textContent = rKnee;
+  if (DOM.studioAngleLeftHip) DOM.studioAngleLeftHip.textContent = lHip;
+  if (DOM.studioAngleRightHip) DOM.studioAngleRightHip.textContent = rHip;
+
+  // 9. Dynamic AI Coaching Notes (Deep-dive + Studio Cockpit + On-screen floating HUD)
   updateCoachTips(data.current_action, stages[data.current_action], angles);
 
   // 10. Draw Canvas Overlay
@@ -715,6 +794,7 @@ function refreshWorkoutDashboard(data, canvas, visualSource, isMirrored) {
 }
 
 function setPhaseChip(element, stage) {
+  if (!element) return;
   if (!stage) {
     element.textContent = 'REST';
     element.className = 'phase-chip';
@@ -740,29 +820,36 @@ function triggerRepModal(exercise) {
 }
 
 function updateCoachTips(action, stage, angles) {
-  if (!action) {
-    DOM.coachNoteText.textContent = 'Keep your full body visible in frame to begin automatic tracking.';
-    return;
-  }
+  let cue = 'Position your full body in frame to track movement & posture.';
   if (action === 'curl') {
     if (stage === 'up') {
-      DOM.coachNoteText.textContent = 'Peak contraction! Now lower arms slowly for maximum hypertrophy.';
+      cue = 'Peak contraction! Now lower arms slowly for maximum hypertrophy.';
     } else {
-      DOM.coachNoteText.textContent = 'Keep upper arms locked against your torso while curling.';
+      cue = 'Keep upper arms locked against your torso while curling.';
     }
   } else if (action === 'press') {
     if (stage === 'up') {
-      DOM.coachNoteText.textContent = 'Full extension overhead! Lower elbows down to shoulder height with control.';
+      cue = 'Full overhead lockout! Lower elbows to shoulder level with control.';
     } else {
-      DOM.coachNoteText.textContent = 'Drive the weight straight up without hyperextending your spine.';
+      cue = 'Drive weight straight up without hyperextending your spine.';
     }
   } else if (action === 'squat') {
     if (stage === 'down') {
-      DOM.coachNoteText.textContent = 'Great depth! Drive through heels and hips to stand tall.';
+      cue = 'Great depth! Drive through heels and hips to stand tall.';
     } else {
-      DOM.coachNoteText.textContent = 'Keep chest proud and track knees over toes as you sit back.';
+      cue = 'Keep chest proud and track knees over toes as you sit back.';
     }
   }
+
+  // Update deep-dive kinematics coach panel
+  if (DOM.coachNoteText) DOM.coachNoteText.textContent = cue;
+
+  // Update Studio live insights cockpit coach card (right beside screen)
+  if (DOM.studioCoachNoteText) DOM.studioCoachNoteText.textContent = cue;
+
+  // Update on-screen floating coach HUD banner (directly on the video screen!)
+  if (DOM.coachFloatingHUDText) DOM.coachFloatingHUDText.textContent = cue;
+  if (DOM.coachFloatingHUD) DOM.coachFloatingHUD.hidden = !action;
 }
 
 // --- Canvas Skeleton & Joint Angle Visualization ---
