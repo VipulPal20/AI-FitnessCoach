@@ -2,3 +2,5 @@
 __pycache__/
 .ultralytics/
 .env
+exercises-dataset/
+exercise_registry.json

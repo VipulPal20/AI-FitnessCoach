@@ -141,6 +141,11 @@
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Upload Photo / Video
             </button>
+            <button id="tabLibraryMode" class="mode-tab" type="button">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Exercise Library
+              <span class="library-count-badge" id="libraryCountBadge">1324</span>
+            </button>
           </div>
 
           <div class="arena-controls">
@@ -265,6 +270,78 @@
 
             <div class="upload-stage-actions">
               <button id="changeFileBtn" class="btn-subtle" type="button">Upload Different File</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode 3: Exercise Library Browser -->
+        <div id="libraryArena" class="viewport-box library-viewport" hidden>
+          <!-- Library Search & Filters -->
+          <div class="library-toolbar">
+            <div class="library-search-box">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="librarySearchInput" type="text" placeholder="Search 1,324+ exercises..." autocomplete="off">
+            </div>
+            <div class="library-filters">
+              <select id="filterCategory" class="filter-select">
+                <option value="">All Categories</option>
+              </select>
+              <select id="filterEquipment" class="filter-select">
+                <option value="">All Equipment</option>
+              </select>
+              <select id="filterTarget" class="filter-select">
+                <option value="">All Muscles</option>
+              </select>
+              <label class="filter-toggle-chip">
+                <input id="filterRepCounting" type="checkbox">
+                <span>Rep Counting Only</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Library Results -->
+          <div class="library-results-header">
+            <span id="libraryResultsCount">Loading exercises...</span>
+            <div class="library-pagination">
+              <button id="libraryPrevBtn" class="btn-chip" disabled>← Prev</button>
+              <span id="libraryPageInfo" class="page-info">Page 1</span>
+              <button id="libraryNextBtn" class="btn-chip">Next →</button>
+            </div>
+          </div>
+
+          <div id="libraryGrid" class="library-exercise-grid">
+            <!-- Exercise cards rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Exercise Detail Modal -->
+        <div id="exerciseDetailModal" class="exercise-modal-backdrop" hidden>
+          <div class="exercise-modal-content">
+            <button id="closeExerciseModal" class="modal-close-btn" type="button">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="modal-body">
+              <div class="modal-media">
+                <img id="modalExerciseGif" src="" alt="Exercise animation">
+              </div>
+              <div class="modal-info">
+                <h2 id="modalExerciseName">Exercise Name</h2>
+                <div class="modal-badges">
+                  <span id="modalCategory" class="detail-badge category"></span>
+                  <span id="modalEquipment" class="detail-badge equipment"></span>
+                  <span id="modalTarget" class="detail-badge target"></span>
+                  <span id="modalRepSupport" class="detail-badge rep-support"></span>
+                </div>
+                <div class="modal-muscles">
+                  <strong>Target Muscle:</strong> <span id="modalTargetMuscle"></span><br>
+                  <strong>Muscle Group:</strong> <span id="modalMuscleGroup"></span><br>
+                  <strong>Secondary:</strong> <span id="modalSecondary"></span>
+                </div>
+                <div class="modal-instructions">
+                  <h3>Instructions</h3>
+                  <div id="modalInstructions" class="instruction-text"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

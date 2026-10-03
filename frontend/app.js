@@ -22,7 +22,22 @@ const state = {
   sessionSeconds: 0,
   sessionTimerId: null,
   totalReps: 0,
-  targets: { curl: 12, press: 10, squat: 15 }
+  targets: { curl: 12, press: 10, squat: 15 },
+
+  // Exercise Library State
+  library: {
+    page: 1,
+    perPage: 24,
+    totalPages: 1,
+    totalCount: 0,
+    search: '',
+    category: '',
+    equipment: '',
+    target: '',
+    repCountingOnly: false,
+    initialized: false,
+    debounceTimer: null,
+  }
 };
 
 // MediaPipe 33 Keypoint Pose Connections
@@ -46,8 +61,37 @@ const DOM = {
   // Mode Tabs
   tabLiveMode: document.querySelector('#tabLiveMode'),
   tabUploadMode: document.querySelector('#tabUploadMode'),
+  tabLibraryMode: document.querySelector('#tabLibraryMode'),
   liveArena: document.querySelector('#liveArena'),
   uploadArena: document.querySelector('#uploadArena'),
+  libraryArena: document.querySelector('#libraryArena'),
+  libraryCountBadge: document.querySelector('#libraryCountBadge'),
+
+  // Exercise Library
+  librarySearchInput: document.querySelector('#librarySearchInput'),
+  filterCategory: document.querySelector('#filterCategory'),
+  filterEquipment: document.querySelector('#filterEquipment'),
+  filterTarget: document.querySelector('#filterTarget'),
+  filterRepCounting: document.querySelector('#filterRepCounting'),
+  libraryResultsCount: document.querySelector('#libraryResultsCount'),
+  libraryPrevBtn: document.querySelector('#libraryPrevBtn'),
+  libraryNextBtn: document.querySelector('#libraryNextBtn'),
+  libraryPageInfo: document.querySelector('#libraryPageInfo'),
+  libraryGrid: document.querySelector('#libraryGrid'),
+
+  // Exercise Detail Modal
+  exerciseDetailModal: document.querySelector('#exerciseDetailModal'),
+  closeExerciseModal: document.querySelector('#closeExerciseModal'),
+  modalExerciseGif: document.querySelector('#modalExerciseGif'),
+  modalExerciseName: document.querySelector('#modalExerciseName'),
+  modalCategory: document.querySelector('#modalCategory'),
+  modalEquipment: document.querySelector('#modalEquipment'),
+  modalTarget: document.querySelector('#modalTarget'),
+  modalRepSupport: document.querySelector('#modalRepSupport'),
+  modalTargetMuscle: document.querySelector('#modalTargetMuscle'),
+  modalMuscleGroup: document.querySelector('#modalMuscleGroup'),
+  modalSecondary: document.querySelector('#modalSecondary'),
+  modalInstructions: document.querySelector('#modalInstructions'),
 
   // Rep Trackers
   cardCurl: document.querySelector('#cardCurl'),
@@ -187,6 +231,9 @@ async function verifyHealth() {
     if (res.ok && data.status === 'ok') {
       DOM.aiStatusText.textContent = 'Vision AI Active';
       DOM.aiStatusPill.style.color = 'var(--accent-emerald)';
+      if (data.total_exercises && DOM.libraryCountBadge) {
+        DOM.libraryCountBadge.textContent = Number(data.total_exercises).toLocaleString();
+      }
     } else {
       DOM.aiStatusText.textContent = 'Degraded';
       DOM.aiStatusPill.style.color = 'var(--accent-amber)';
@@ -202,6 +249,10 @@ function attachEvents() {
   // Mode Switchers
   DOM.tabLiveMode.addEventListener('click', () => setMode('live'));
   DOM.tabUploadMode.addEventListener('click', () => setMode('upload'));
+  if (DOM.tabLibraryMode) {
+    DOM.tabLibraryMode.addEventListener('click', () => setMode('library'));
+  }
+  attachLibraryEvents();
 
   // Camera Actions
   DOM.startCameraBtn.addEventListener('click', startWebcam);
@@ -254,17 +305,33 @@ function attachEvents() {
 function setMode(mode) {
   state.activeMode = mode;
   if (mode === 'live') {
-    DOM.tabLiveMode.classList.add('active');
-    DOM.tabUploadMode.classList.remove('active');
-    DOM.liveArena.hidden = false;
-    DOM.uploadArena.hidden = true;
+    DOM.tabLiveMode?.classList.add('active');
+    DOM.tabUploadMode?.classList.remove('active');
+    DOM.tabLibraryMode?.classList.remove('active');
+    if (DOM.liveArena) DOM.liveArena.hidden = false;
+    if (DOM.uploadArena) DOM.uploadArena.hidden = true;
+    if (DOM.libraryArena) DOM.libraryArena.hidden = true;
     stopVideoFilePlayback();
-  } else {
-    DOM.tabUploadMode.classList.add('active');
-    DOM.tabLiveMode.classList.remove('active');
-    DOM.uploadArena.hidden = false;
-    DOM.liveArena.hidden = true;
+  } else if (mode === 'upload') {
+    DOM.tabUploadMode?.classList.add('active');
+    DOM.tabLiveMode?.classList.remove('active');
+    DOM.tabLibraryMode?.classList.remove('active');
+    if (DOM.uploadArena) DOM.uploadArena.hidden = false;
+    if (DOM.liveArena) DOM.liveArena.hidden = true;
+    if (DOM.libraryArena) DOM.libraryArena.hidden = true;
     stopWebcam();
+  } else if (mode === 'library') {
+    DOM.tabLibraryMode?.classList.add('active');
+    DOM.tabLiveMode?.classList.remove('active');
+    DOM.tabUploadMode?.classList.remove('active');
+    if (DOM.libraryArena) DOM.libraryArena.hidden = false;
+    if (DOM.liveArena) DOM.liveArena.hidden = true;
+    if (DOM.uploadArena) DOM.uploadArena.hidden = true;
+    stopWebcam();
+    stopVideoFilePlayback();
+    if (!state.library.initialized) {
+      initExerciseLibrary();
+    }
   }
 }
 
@@ -835,4 +902,307 @@ function bindDragAndDrop() {
       handleUploadedMedia(file);
     }
   }, false);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXERCISE LIBRARY CONTROLLER (1,324+ exercises, categories, GIF demonstrations)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function attachLibraryEvents() {
+  if (!DOM.libraryArena) return;
+
+  // Search input with debounce
+  DOM.librarySearchInput?.addEventListener('input', (e) => {
+    clearTimeout(state.library.debounceTimer);
+    state.library.debounceTimer = setTimeout(() => {
+      state.library.search = e.target.value.trim();
+      state.library.page = 1;
+      fetchExercises();
+    }, 300);
+  });
+
+  // Filter Dropdowns
+  DOM.filterCategory?.addEventListener('change', (e) => {
+    state.library.category = e.target.value;
+    state.library.page = 1;
+    fetchExercises();
+  });
+
+  DOM.filterEquipment?.addEventListener('change', (e) => {
+    state.library.equipment = e.target.value;
+    state.library.page = 1;
+    fetchExercises();
+  });
+
+  DOM.filterTarget?.addEventListener('change', (e) => {
+    state.library.target = e.target.value;
+    state.library.page = 1;
+    fetchExercises();
+  });
+
+  DOM.filterRepCounting?.addEventListener('change', (e) => {
+    state.library.repCountingOnly = e.target.checked;
+    state.library.page = 1;
+    fetchExercises();
+  });
+
+  // Pagination Buttons
+  DOM.libraryPrevBtn?.addEventListener('click', () => {
+    if (state.library.page > 1) {
+      state.library.page--;
+      fetchExercises();
+    }
+  });
+
+  DOM.libraryNextBtn?.addEventListener('click', () => {
+    if (state.library.page < state.library.totalPages) {
+      state.library.page++;
+      fetchExercises();
+    }
+  });
+
+  // Modal Close Events
+  DOM.closeExerciseModal?.addEventListener('click', closeExerciseModal);
+  DOM.exerciseDetailModal?.addEventListener('click', (e) => {
+    if (e.target === DOM.exerciseDetailModal) {
+      closeExerciseModal();
+    }
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && DOM.exerciseDetailModal && !DOM.exerciseDetailModal.hidden) {
+      closeExerciseModal();
+    }
+  });
+}
+
+async function initExerciseLibrary() {
+  state.library.initialized = true;
+  try {
+    const res = await fetch('/api/v1/exercises/categories/summary');
+    if (res.ok) {
+      const data = await res.json();
+      populateDropdown(DOM.filterCategory, data.categories, 'All Categories');
+      populateDropdown(DOM.filterEquipment, data.equipment_types, 'All Equipment');
+      populateDropdown(DOM.filterTarget, data.targets, 'All Muscles');
+    }
+  } catch (err) {
+    console.warn('Failed to load category summaries:', err);
+  }
+  fetchExercises();
+}
+
+function populateDropdown(selectEl, dict, defaultLabel) {
+  if (!selectEl || !dict) return;
+  selectEl.innerHTML = `<option value="">${defaultLabel}</option>`;
+  for (const [key, count] of Object.entries(dict)) {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = `${key} (${count})`;
+    selectEl.appendChild(opt);
+  }
+}
+
+async function fetchExercises() {
+  if (!DOM.libraryGrid) return;
+  DOM.libraryGrid.innerHTML = `
+    <div style="grid-column: 1/-1; text-align: center; padding: 48px; color: var(--text-tertiary);">
+      <div class="hud-spinner" style="display:inline-block; margin-bottom: 12px;"></div>
+      <div>Loading exercises...</div>
+    </div>
+  `;
+
+  const params = new URLSearchParams({
+    page: String(state.library.page),
+    per_page: String(state.library.perPage)
+  });
+  if (state.library.search) params.set('search', state.library.search);
+  if (state.library.category) params.set('category', state.library.category);
+  if (state.library.equipment) params.set('equipment', state.library.equipment);
+  if (state.library.target) params.set('target', state.library.target);
+  if (state.library.repCountingOnly) params.set('rep_counting', 'true');
+
+  try {
+    const res = await fetch(`/api/v1/exercises?${params.toString()}`);
+    const data = await res.json();
+
+    if (!res.ok || data.status !== 'success') {
+      DOM.libraryGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 36px; color: var(--accent-rose);">Failed to load exercises.</div>`;
+      return;
+    }
+
+    state.library.totalCount = data.total;
+    state.library.totalPages = data.pages || 1;
+
+    // Update results count & pagination info
+    if (DOM.libraryResultsCount) {
+      DOM.libraryResultsCount.textContent = `${Number(data.total).toLocaleString()} exercise${data.total === 1 ? '' : 's'} found`;
+    }
+    if (DOM.libraryPageInfo) {
+      DOM.libraryPageInfo.textContent = `Page ${data.page} of ${Math.max(data.pages, 1)}`;
+    }
+    if (DOM.libraryPrevBtn) DOM.libraryPrevBtn.disabled = data.page <= 1;
+    if (DOM.libraryNextBtn) DOM.libraryNextBtn.disabled = data.page >= data.pages;
+
+    renderExerciseCards(data.exercises);
+  } catch (err) {
+    console.error('Error fetching exercises:', err);
+    DOM.libraryGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 36px; color: var(--accent-rose);">Network error loading exercises.</div>`;
+  }
+}
+
+function renderExerciseCards(exercises) {
+  if (!DOM.libraryGrid) return;
+  if (!exercises || exercises.length === 0) {
+    DOM.libraryGrid.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 48px; color: var(--text-tertiary);">
+        <p style="font-size: 16px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">No exercises found</p>
+        <p style="font-size: 13px;">Try clearing filters or adjusting your search term.</p>
+      </div>
+    `;
+    return;
+  }
+
+  DOM.libraryGrid.innerHTML = exercises.map(ex => {
+    const mediaPath = ex.image || ex.gif_url;
+    const mediaUrl = mediaPath ? `/exercise-media/${mediaPath}` : '';
+    const repBadge = ex.rep_counting_supported
+      ? `<span class="card-chip rep-ok">AI Reps</span>`
+      : '';
+    const equipChip = ex.equipment ? `<span class="card-chip equipment">${escapeHtml(ex.equipment)}</span>` : '';
+    const catChip = ex.category ? `<span class="card-chip">${escapeHtml(ex.category)}</span>` : '';
+
+    return `
+      <div class="exercise-lib-card" data-exercise-id="${escapeHtml(ex.id)}" tabindex="0" role="button">
+        <img class="card-thumb" src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(ex.name)}" loading="lazy" onerror="this.src='/samples/sample_squat.webp'; this.onerror=null;">
+        <div class="card-label">
+          <div class="card-name" title="${escapeHtml(ex.name)}">${escapeHtml(ex.name)}</div>
+          <div class="card-meta">
+            ${catChip}
+            ${equipChip}
+            ${repBadge}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Attach card click handlers
+  DOM.libraryGrid.querySelectorAll('.exercise-lib-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const exId = card.getAttribute('data-exercise-id');
+      if (exId) openExerciseModal(exId);
+    });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const exId = card.getAttribute('data-exercise-id');
+        if (exId) openExerciseModal(exId);
+      }
+    });
+  });
+}
+
+async function openExerciseModal(exerciseId) {
+  if (!DOM.exerciseDetailModal) return;
+
+  // Show modal immediately with loading state
+  DOM.exerciseDetailModal.hidden = false;
+  if (DOM.modalExerciseName) DOM.modalExerciseName.textContent = 'Loading...';
+  if (DOM.modalExerciseGif) DOM.modalExerciseGif.src = '';
+  if (DOM.modalCategory) DOM.modalCategory.textContent = '';
+  if (DOM.modalEquipment) DOM.modalEquipment.textContent = '';
+  if (DOM.modalTarget) DOM.modalTarget.textContent = '';
+  if (DOM.modalRepSupport) DOM.modalRepSupport.textContent = '';
+  if (DOM.modalTargetMuscle) DOM.modalTargetMuscle.textContent = '';
+  if (DOM.modalMuscleGroup) DOM.modalMuscleGroup.textContent = '';
+  if (DOM.modalSecondary) DOM.modalSecondary.textContent = '';
+  if (DOM.modalInstructions) DOM.modalInstructions.textContent = 'Loading exercise details...';
+
+  try {
+    const res = await fetch(`/api/v1/exercises/${exerciseId}`);
+    const data = await res.json();
+    if (!res.ok || data.status !== 'success') {
+      if (DOM.modalInstructions) DOM.modalInstructions.textContent = 'Failed to load details.';
+      return;
+    }
+
+    const ex = data.exercise;
+    if (DOM.modalExerciseName) DOM.modalExerciseName.textContent = ex.name || 'Exercise';
+
+    // GIF media
+    const gifPath = ex.gif_url || ex.image;
+    if (DOM.modalExerciseGif) {
+      DOM.modalExerciseGif.src = gifPath ? `/exercise-media/${gifPath}` : '';
+      DOM.modalExerciseGif.alt = ex.name;
+    }
+
+    // Badges
+    if (DOM.modalCategory) {
+      DOM.modalCategory.textContent = ex.category || ex.body_part || 'General';
+      DOM.modalCategory.hidden = !ex.category && !ex.body_part;
+    }
+    if (DOM.modalEquipment) {
+      DOM.modalEquipment.textContent = ex.equipment || 'Bodyweight';
+      DOM.modalEquipment.hidden = !ex.equipment;
+    }
+    if (DOM.modalTarget) {
+      DOM.modalTarget.textContent = ex.target || '';
+      DOM.modalTarget.hidden = !ex.target;
+    }
+    if (DOM.modalRepSupport) {
+      const rep = ex.rep_counting || {};
+      if (rep.supported) {
+        DOM.modalRepSupport.textContent = 'AI Rep Counting Ready';
+        DOM.modalRepSupport.className = 'detail-badge rep-support';
+        DOM.modalRepSupport.hidden = false;
+      } else {
+        DOM.modalRepSupport.textContent = 'Manual Track';
+        DOM.modalRepSupport.className = 'detail-badge';
+        DOM.modalRepSupport.style.background = 'rgba(255,255,255,0.06)';
+        DOM.modalRepSupport.style.color = 'var(--text-tertiary)';
+        DOM.modalRepSupport.hidden = false;
+      }
+    }
+
+    // Muscles
+    if (DOM.modalTargetMuscle) DOM.modalTargetMuscle.textContent = ex.target || 'N/A';
+    if (DOM.modalMuscleGroup) DOM.modalMuscleGroup.textContent = ex.body_part || ex.category || 'N/A';
+    if (DOM.modalSecondary) {
+      const sec = Array.isArray(ex.secondary_muscles) ? ex.secondary_muscles.join(', ') : (ex.secondary_muscles || 'None');
+      DOM.modalSecondary.textContent = sec;
+    }
+
+    // Instructions
+    let instText = '';
+    if (ex.instructions) {
+      if (typeof ex.instructions === 'object') {
+        instText = ex.instructions.en || ex.instructions.es || Object.values(ex.instructions)[0] || '';
+      } else {
+        instText = String(ex.instructions);
+      }
+    }
+    if (DOM.modalInstructions) {
+      DOM.modalInstructions.textContent = instText || 'No instructions provided for this exercise.';
+    }
+  } catch (err) {
+    console.error('Failed to load exercise details:', err);
+    if (DOM.modalInstructions) DOM.modalInstructions.textContent = 'Failed to load exercise details.';
+  }
+}
+
+function closeExerciseModal() {
+  if (DOM.exerciseDetailModal) {
+    DOM.exerciseDetailModal.hidden = true;
+    if (DOM.modalExerciseGif) DOM.modalExerciseGif.src = '';
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
