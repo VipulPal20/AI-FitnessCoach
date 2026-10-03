@@ -1,6 +1,12 @@
-# 🏋️ AI Personal Fitness Trainer & Exercise Recognition Engine
+<p align="center">
+  <img src="frontend/assets/fitnesscoach-logo.svg" alt="FitnessCoach Logo" width="460">
+</p>
 
-An AI-powered computer vision application for real-time exercise classification, pose estimation, joint kinematic analysis, and repetition counting. Built with **FastAPI**, **MediaPipe Pose**, **TensorFlow / Keras Attention-LSTM**, and **OpenCV**, featuring an interactive web dashboard.
+<p align="center">
+  <strong>AI Based Fitness Evaluator & Real-Time Exercise Trainer Engine</strong>
+</p>
+
+An AI-powered computer vision application for real-time exercise classification, pose estimation, joint kinematic analysis, and repetition counting across 1,324+ gym exercises. Built with **FastAPI**, **MediaPipe Pose**, **TensorFlow / Keras Attention-LSTM**, and **OpenCV**, featuring an interactive web dashboard.
 
 ---
 
@@ -123,4 +129,9 @@ Navigate to:
 
 ---
 
-\.
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE) — see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2026 Vipul Pal.
+

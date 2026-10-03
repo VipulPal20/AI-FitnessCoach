@@ -37,7 +37,11 @@ const state = {
     repCountingOnly: false,
     initialized: false,
     debounceTimer: null,
-  }
+  },
+
+  // Active Target Exercise from Library
+  selectedExercise: null,
+  activeExerciseDetail: null
 };
 
 // MediaPipe 33 Keypoint Pose Connections
@@ -92,6 +96,19 @@ const DOM = {
   modalMuscleGroup: document.querySelector('#modalMuscleGroup'),
   modalSecondary: document.querySelector('#modalSecondary'),
   modalInstructions: document.querySelector('#modalInstructions'),
+  btnStartWorkoutExercise: document.querySelector('#btnStartWorkoutExercise'),
+  btnUploadExercise: document.querySelector('#btnUploadExercise'),
+
+  // Active Exercise HUD & PiP Guide
+  activeExerciseHUD: document.querySelector('#activeExerciseHUD'),
+  activeExerciseName: document.querySelector('#activeExerciseName'),
+  activeExerciseBadge: document.querySelector('#activeExerciseBadge'),
+  toggleFormGuideBtn: document.querySelector('#toggleFormGuideBtn'),
+  clearActiveExerciseBtn: document.querySelector('#clearActiveExerciseBtn'),
+  formGuidePiP: document.querySelector('#formGuidePiP'),
+  pipExerciseTitle: document.querySelector('#pipExerciseTitle'),
+  pipExerciseGif: document.querySelector('#pipExerciseGif'),
+  closeFormGuideBtn: document.querySelector('#closeFormGuideBtn'),
 
   // Rep Trackers
   cardCurl: document.querySelector('#cardCurl'),
@@ -203,6 +220,16 @@ document.addEventListener('DOMContentLoaded', () => {
   verifyHealth();
   attachEvents();
   startSessionClock();
+
+  // URL Hash direct access: #library or #exercise-0001
+  const hash = window.location.hash.toLowerCase();
+  if (hash === '#library') {
+    setMode('library');
+  } else if (hash.startsWith('#exercise-')) {
+    const exId = hash.replace('#exercise-', '');
+    setMode('library');
+    openExerciseModal(exId);
+  }
 });
 
 // --- Session Clock & Calories ---
@@ -973,6 +1000,28 @@ function attachLibraryEvents() {
       closeExerciseModal();
     }
   });
+
+  // Active Exercise HUD & PiP Controls
+  DOM.clearActiveExerciseBtn?.addEventListener('click', () => {
+    state.selectedExercise = null;
+    if (DOM.activeExerciseHUD) DOM.activeExerciseHUD.hidden = true;
+    if (DOM.formGuidePiP) DOM.formGuidePiP.hidden = true;
+    if (DOM.coachNoteText) {
+      DOM.coachNoteText.textContent = 'AI Ready. Stand 6-8 feet away for full body detection.';
+    }
+  });
+
+  DOM.toggleFormGuideBtn?.addEventListener('click', () => {
+    if (DOM.formGuidePiP) {
+      DOM.formGuidePiP.hidden = !DOM.formGuidePiP.hidden;
+    }
+  });
+
+  DOM.closeFormGuideBtn?.addEventListener('click', () => {
+    if (DOM.formGuidePiP) {
+      DOM.formGuidePiP.hidden = true;
+    }
+  });
 }
 
 async function initExerciseLibrary() {
@@ -1073,6 +1122,7 @@ function renderExerciseCards(exercises) {
 
     return `
       <div class="exercise-lib-card" data-exercise-id="${escapeHtml(ex.id)}" tabindex="0" role="button">
+        <button class="card-quick-train" data-quick-id="${escapeHtml(ex.id)}" type="button" title="Start training now with webcam">▶ Train</button>
         <img class="card-thumb" src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(ex.name)}" loading="lazy" onerror="this.src='/samples/sample_squat.webp'; this.onerror=null;">
         <div class="card-label">
           <div class="card-name" title="${escapeHtml(ex.name)}">${escapeHtml(ex.name)}</div>
@@ -1086,7 +1136,21 @@ function renderExerciseCards(exercises) {
     `;
   }).join('');
 
-  // Attach card click handlers
+  // Quick Train Button Handlers on each card
+  DOM.libraryGrid.querySelectorAll('.card-quick-train').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const exId = btn.getAttribute('data-quick-id');
+      const exObj = exercises.find(x => String(x.id) === String(exId));
+      if (exObj) {
+        startTrainingExercise(exObj, 'live');
+      } else if (exId) {
+        openExerciseModal(exId);
+      }
+    });
+  });
+
+  // Card click handlers (opens full detail modal)
   DOM.libraryGrid.querySelectorAll('.exercise-lib-card').forEach(card => {
     card.addEventListener('click', () => {
       const exId = card.getAttribute('data-exercise-id');
@@ -1127,6 +1191,8 @@ async function openExerciseModal(exerciseId) {
     }
 
     const ex = data.exercise;
+    state.activeExerciseDetail = ex;
+
     if (DOM.modalExerciseName) DOM.modalExerciseName.textContent = ex.name || 'Exercise';
 
     // GIF media
@@ -1184,6 +1250,18 @@ async function openExerciseModal(exerciseId) {
     if (DOM.modalInstructions) {
       DOM.modalInstructions.textContent = instText || 'No instructions provided for this exercise.';
     }
+
+    // Wire up Direct Action Buttons
+    if (DOM.btnStartWorkoutExercise) {
+      DOM.btnStartWorkoutExercise.onclick = () => {
+        startTrainingExercise(ex, 'live');
+      };
+    }
+    if (DOM.btnUploadExercise) {
+      DOM.btnUploadExercise.onclick = () => {
+        startTrainingExercise(ex, 'upload');
+      };
+    }
   } catch (err) {
     console.error('Failed to load exercise details:', err);
     if (DOM.modalInstructions) DOM.modalInstructions.textContent = 'Failed to load exercise details.';
@@ -1194,6 +1272,61 @@ function closeExerciseModal() {
   if (DOM.exerciseDetailModal) {
     DOM.exerciseDetailModal.hidden = true;
     if (DOM.modalExerciseGif) DOM.modalExerciseGif.src = '';
+  }
+}
+
+// ── Direct Training Launcher for Any Library Exercise ───────────────────────
+function startTrainingExercise(exercise, targetMode = 'live') {
+  if (!exercise) return;
+  state.selectedExercise = exercise;
+
+  // 1. Update Active Exercise HUD in Live Arena
+  if (DOM.activeExerciseHUD) {
+    DOM.activeExerciseHUD.hidden = false;
+  }
+  if (DOM.activeExerciseName) {
+    DOM.activeExerciseName.textContent = exercise.name || 'Exercise';
+  }
+  if (DOM.activeExerciseBadge) {
+    const isRepReady = exercise.rep_counting?.supported || false;
+    DOM.activeExerciseBadge.textContent = isRepReady ? 'AI Reps Ready' : 'Form Tracking';
+    DOM.activeExerciseBadge.style.background = isRepReady ? 'rgba(16, 185, 129, 0.15)' : 'rgba(6, 182, 212, 0.15)';
+    DOM.activeExerciseBadge.style.color = isRepReady ? 'var(--accent-emerald)' : 'var(--accent-cyan)';
+    DOM.activeExerciseBadge.style.borderColor = isRepReady ? 'rgba(16, 185, 129, 0.3)' : 'rgba(6, 182, 212, 0.3)';
+  }
+
+  // 2. Picture-in-Picture floating form demonstration
+  const mediaPath = exercise.gif_url || exercise.image;
+  if (mediaPath && DOM.pipExerciseGif) {
+    DOM.pipExerciseGif.src = `/exercise-media/${mediaPath}`;
+    if (DOM.pipExerciseTitle) DOM.pipExerciseTitle.textContent = exercise.name;
+    if (DOM.formGuidePiP) DOM.formGuidePiP.hidden = false;
+  }
+
+  // 3. Update AI Coach Note with exercise target & guidance
+  let tip = '';
+  if (exercise.instructions) {
+    if (typeof exercise.instructions === 'object') {
+      tip = exercise.instructions.en || Object.values(exercise.instructions)[0] || '';
+    } else {
+      tip = String(exercise.instructions);
+    }
+  }
+  if (DOM.coachNoteText) {
+    const targetInfo = exercise.target ? ` • Target: ${exercise.target}` : '';
+    const firstSentence = tip ? tip.split('.')[0] + '.' : 'Maintain steady form throughout each repetition.';
+    DOM.coachNoteText.textContent = `🎯 Training ${exercise.name}${targetInfo}. ${firstSentence}`;
+  }
+
+  // 4. Close the modal if open
+  closeExerciseModal();
+
+  // 5. Switch to desired mode (live or upload)
+  setMode(targetMode);
+
+  // 6. If live mode and webcam is not streaming, trigger start
+  if (targetMode === 'live' && !state.isStreaming) {
+    startWebcam();
   }
 }
 

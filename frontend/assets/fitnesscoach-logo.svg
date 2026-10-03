@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 130" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="fcCyanEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Main Word: FitnessCoach -->
+  <g id="brandText" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800">
+    <!-- "Fitness" in bold pure white -->
+    <text x="10" y="76" font-size="58" fill="#FFFFFF" letter-spacing="-1">Fitness</text>
+
+    <!-- "C" in Coach with Cyan glow -->
+    <text x="218" y="76" font-size="58" fill="url(#fcCyanEmerald)" letter-spacing="-1">C</text>
+
+    <!-- The "o" replaced by Crosshair & Flexing Bicep Target -->
+    <g transform="translate(262, 29)" id="bicepTarget" filter="url(#neonGlow)">
+      <!-- Outer Crosshair Circle -->
+      <circle cx="26" cy="26" r="22" stroke="url(#fcCyanEmerald)" stroke-width="3.5" fill="none" opacity="0.95" />
+      <!-- Inner Ring -->
+      <circle cx="26" cy="26" r="14" stroke="#06B6D4" stroke-width="1.5" stroke-dasharray="3 3" fill="none" opacity="0.6" />
+      <!-- Crosshair Ticks -->
+      <line x1="26" y1="0" x2="26" y2="7" stroke="#06B6D4" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="26" y1="45" x2="26" y2="52" stroke="#06B6D4" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="0" y1="26" x2="7" y2="26" stroke="#06B6D4" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="45" y1="26" x2="52" y2="26" stroke="#06B6D4" stroke-width="2.5" stroke-linecap="round" />
+      <!-- Flexing Bicep Icon Silhouette inside target -->
+      <path d="M 21 34 C 18 34 16 32 17 29 C 18 26 21 24 23 23 C 24 20 26 18 29 18 C 32 18 34 20 33 23 C 35 24 36 26 35 29 C 34 32 30 33 27 33 Z" fill="url(#fcCyanEmerald)" opacity="0.9" />
+      <path d="M 23 24 C 25 21 28 20 30 21 C 32 22 31 25 29 26 Z" fill="#FFFFFF" opacity="0.75" />
+    </g>
+
+    <!-- "ach" in Gradient Cyan-to-Emerald -->
+    <text x="320" y="76" font-size="58" fill="url(#fcCyanEmerald)" letter-spacing="-1">ach</text>
+  </g>
+
+  <!-- Subtitle matching reference: "AI based Fitness evaluator and trainer" -->
+  <text x="14" y="108" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="500" font-size="16" fill="#94A3B8" letter-spacing="1.2">AI based Fitness evaluator and trainer</text>
+</svg>

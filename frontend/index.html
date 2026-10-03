@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PulseAI — Pro Fitness Trainer & Exercise Recognition</title>
+  <title>FitnessCoach — AI Based Fitness Evaluator & Trainer</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/fitnesscoach-logo.svg">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,17 +17,9 @@
   <!-- App Header -->
   <header class="app-header">
     <div class="header-left">
-      <div class="brand-badge">
-        <div class="brand-icon">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
-        </div>
-        <div class="brand-title">
-          <span class="brand-name">Pulse<strong>AI</strong></span>
-          <span class="brand-tag">VISION FITNESS TRAINER</span>
-        </div>
-      </div>
+      <a href="/" class="brand-badge" title="FitnessCoach — AI based Fitness evaluator and trainer" style="text-decoration:none;">
+        <img src="/assets/fitnesscoach-logo.svg" alt="FitnessCoach — AI based Fitness evaluator and trainer" class="header-logo">
+      </a>
 
       <div class="session-stat-pill">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -169,6 +162,32 @@
           <div class="video-stage">
             <video id="webcamVideo" autoplay playsinline muted></video>
             <canvas id="liveCanvas"></canvas>
+
+            <!-- Active Selected Library Exercise HUD Banner -->
+            <div id="activeExerciseHUD" class="active-exercise-hud" hidden>
+              <div class="active-exercise-info">
+                <span class="active-pulse-dot"></span>
+                <span class="active-exercise-title">Active Target:</span>
+                <strong id="activeExerciseName">Exercise Name</strong>
+                <span id="activeExerciseBadge" class="active-exercise-chip">AI Reps</span>
+              </div>
+              <div class="active-exercise-actions">
+                <button id="toggleFormGuideBtn" class="btn-pip-guide" type="button" title="Toggle form demonstration guide">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>
+                  <span>Form Guide</span>
+                </button>
+                <button id="clearActiveExerciseBtn" class="btn-clear-target" type="button" title="Clear selection">✕</button>
+              </div>
+            </div>
+
+            <!-- Picture-in-Picture Floating Exercise Reference GIF -->
+            <div id="formGuidePiP" class="form-guide-pip" hidden>
+              <div class="pip-header">
+                <span id="pipExerciseTitle">Form Guide</span>
+                <button id="closeFormGuideBtn" class="pip-close" type="button">✕</button>
+              </div>
+              <img id="pipExerciseGif" src="" alt="Form demonstration">
+            </div>
 
             <!-- On-Screen Smart HUD -->
             <div id="actionBadgeHUD" class="hud-pill" hidden>
@@ -341,6 +360,17 @@
                   <h3>Instructions</h3>
                   <div id="modalInstructions" class="instruction-text"></div>
                 </div>
+
+                <div class="modal-actions">
+                  <button id="btnStartWorkoutExercise" class="btn-train-now" type="button">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span>Train This Exercise Live</span>
+                  </button>
+                  <button id="btnUploadExercise" class="btn-train-upload" type="button">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span>Test Video</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -481,7 +511,7 @@
   </main>
 
   <footer class="app-footer">
-    <p>PulseAI — Real-Time Exercise Recognition, Rep Counter & Posture Coach Engine</p>
+    <p>FitnessCoach — AI Based Fitness Evaluator and Trainer • © 2026 Vipul Pal • Released under MIT License</p>
   </footer>
 
   <script src="/app.js" defer></script>
