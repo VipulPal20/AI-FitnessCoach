@@ -16,6 +16,16 @@ def main() -> None:
     parser.add_argument("--fraction", type=float, default=1.0, help="Fraction of the dataset to use (0-1].")
     args = parser.parse_args()
 
+    # Ensure dataset YAML path points to the current workspace directory
+    yaml_path = args.data.resolve()
+    if yaml_path.is_file():
+        import re
+        content = yaml_path.read_text(encoding="utf-8")
+        target_dir = yaml_path.parent.resolve().as_posix()
+        updated = re.sub(r"^path:\s*.*$", f"path: {target_dir}", content, flags=re.MULTILINE)
+        if updated != content:
+            yaml_path.write_text(updated, encoding="utf-8")
+
     config_root = Path(__file__).with_name(".ultralytics")
     config_root.mkdir(parents=True, exist_ok=True)
     os.environ.setdefault("YOLO_CONFIG_DIR", str(config_root))

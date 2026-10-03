@@ -1,4 +1,4 @@
-path: C:/Users/vipul/opencv_project/exercise_pose_dataset
+path: C:/Users/vipul/AI-FitnessCoach/exercise_pose_dataset
 train: images/train
 val: images/val
 kpt_shape: [17, 3]
