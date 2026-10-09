@@ -1,56 +1,42 @@
 {
-  "rows": 31033,
+  "rows": 21420,
   "labels": [
-    "Jumping Jacks",
-    "Pull ups",
-    "Push Ups",
-    "Russian twists",
-    "Squats"
+    "curl",
+    "press",
+    "squat"
   ],
-  "test_accuracy": 0.8845,
+  "test_accuracy": 0.8252,
   "classification_report": {
-    "Jumping Jacks": {
-      "precision": 0.906187624750499,
-      "recall": 0.8714011516314779,
-      "f1-score": 0.8884540117416829,
-      "support": 1042.0
-    },
-    "Pull ups": {
-      "precision": 0.8612975391498882,
-      "recall": 0.8671171171171171,
-      "f1-score": 0.8641975308641975,
+    "curl": {
+      "precision": 0.8176555716353111,
+      "recall": 0.8483483483483484,
+      "f1-score": 0.8327192336035372,
       "support": 1332.0
     },
-    "Push Ups": {
-      "precision": 0.8757197696737045,
-      "recall": 0.9344598054275474,
-      "f1-score": 0.9041367351994055,
+    "press": {
+      "precision": 0.8221110100090991,
+      "recall": 0.9252432155657963,
+      "f1-score": 0.8706335822693327,
       "support": 1953.0
     },
-    "Russian twists": {
-      "precision": 0.933570581257414,
-      "recall": 0.8933030646992054,
-      "f1-score": 0.9129930394431555,
-      "support": 881.0
-    },
-    "Squats": {
-      "precision": 0.8697972251867663,
-      "recall": 0.8158158158158159,
-      "f1-score": 0.8419421487603306,
+    "squat": {
+      "precision": 0.8494318181818182,
+      "recall": 0.5985985985985987,
+      "f1-score": 0.7022900763358778,
       "support": 999.0
     },
-    "accuracy": 0.8844852585790237,
+    "accuracy": 0.8251633986928104,
     "macro avg": {
-      "precision": 0.8893145480036544,
-      "recall": 0.8764193909382326,
-      "f1-score": 0.8823446932017545,
-      "support": 6207.0
+      "precision": 0.8297327999420762,
+      "recall": 0.7907300541709145,
+      "f1-score": 0.8018809640695825,
+      "support": 4284.0
     },
     "weighted avg": {
-      "precision": 0.8849975265602992,
-      "recall": 0.8844852585790237,
-      "f1-score": 0.8841801690915699,
-      "support": 6207.0
+      "precision": 0.8270967344373579,
+      "recall": 0.8251633986928104,
+      "f1-score": 0.8195885134433848,
+      "support": 4284.0
     }
   },
   "note": "This is a stratified sample split. Sequential samples from the same recording may be correlated, so validate on separate people/videos before relying on real-world accuracy."
