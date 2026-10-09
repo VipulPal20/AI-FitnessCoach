@@ -17,6 +17,7 @@ const state = {
   sendIntervalMs: 80,
   intervalTimer: null,
   videoPlaybackTimer: null,
+  videoObjectUrl: null,
 
   // Workout Session State
   sessionSeconds: 0,
@@ -65,6 +66,7 @@ const DOM = {
   // Mode Tabs
   tabLiveMode: document.querySelector('#tabLiveMode'),
   tabUploadMode: document.querySelector('#tabUploadMode'),
+  tabVideoMode: document.querySelector('#tabVideoMode'),
   tabLibraryMode: document.querySelector('#tabLibraryMode'),
   liveArena: document.querySelector('#liveArena'),
   uploadArena: document.querySelector('#uploadArena'),
@@ -302,6 +304,7 @@ function attachEvents() {
   // Mode Switchers
   DOM.tabLiveMode.addEventListener('click', () => setMode('live'));
   DOM.tabUploadMode.addEventListener('click', () => setMode('upload'));
+  DOM.tabVideoMode?.addEventListener('click', () => setMode('video'));
   if (DOM.tabLibraryMode) {
     DOM.tabLibraryMode.addEventListener('click', () => setMode('library'));
   }
@@ -360,6 +363,7 @@ function setMode(mode) {
   if (mode === 'live') {
     DOM.tabLiveMode?.classList.add('active');
     DOM.tabUploadMode?.classList.remove('active');
+    DOM.tabVideoMode?.classList.remove('active');
     DOM.tabLibraryMode?.classList.remove('active');
     if (DOM.liveArena) DOM.liveArena.hidden = false;
     if (DOM.uploadArena) DOM.uploadArena.hidden = true;
@@ -370,17 +374,35 @@ function setMode(mode) {
   } else if (mode === 'upload') {
     DOM.tabUploadMode?.classList.add('active');
     DOM.tabLiveMode?.classList.remove('active');
+    DOM.tabVideoMode?.classList.remove('active');
     DOM.tabLibraryMode?.classList.remove('active');
     if (DOM.uploadArena) DOM.uploadArena.hidden = false;
     if (DOM.liveArena) DOM.liveArena.hidden = true;
     if (DOM.libraryArena) DOM.libraryArena.hidden = true;
     if (DOM.studioWorkspace) DOM.studioWorkspace.classList.remove('library-mode');
     if (DOM.studioLiveInsights) DOM.studioLiveInsights.hidden = false;
+    if (DOM.filePicker) DOM.filePicker.accept = 'image/jpeg,image/png,image/webp,video/mp4,video/webm,video/ogg,video/quicktime';
     stopWebcam();
+  } else if (mode === 'video') {
+    DOM.tabVideoMode?.classList.add('active');
+    DOM.tabLiveMode?.classList.remove('active');
+    DOM.tabUploadMode?.classList.remove('active');
+    DOM.tabLibraryMode?.classList.remove('active');
+    if (DOM.uploadArena) DOM.uploadArena.hidden = false;
+    if (DOM.liveArena) DOM.liveArena.hidden = true;
+    if (DOM.libraryArena) DOM.libraryArena.hidden = true;
+    if (DOM.studioWorkspace) DOM.studioWorkspace.classList.remove('library-mode');
+    if (DOM.studioLiveInsights) DOM.studioLiveInsights.hidden = false;
+    if (DOM.filePicker) DOM.filePicker.accept = 'video/mp4,video/webm,video/ogg,video/quicktime';
+    if (DOM.uploadResultStage) DOM.uploadResultStage.hidden = true;
+    if (DOM.uploadDropArea) DOM.uploadDropArea.hidden = false;
+    stopWebcam();
+    stopVideoFilePlayback();
   } else if (mode === 'library') {
     DOM.tabLibraryMode?.classList.add('active');
     DOM.tabLiveMode?.classList.remove('active');
     DOM.tabUploadMode?.classList.remove('active');
+    DOM.tabVideoMode?.classList.remove('active');
     if (DOM.libraryArena) DOM.libraryArena.hidden = false;
     if (DOM.liveArena) DOM.liveArena.hidden = true;
     if (DOM.uploadArena) DOM.uploadArena.hidden = true;
@@ -542,6 +564,11 @@ function runStreamInference() {
 function handleUploadedMedia(file) {
   if (!file) return;
 
+  if (state.activeMode === 'video' && !file.type.startsWith('video/')) {
+    alert('Video Analysis accepts video files only (MP4, WEBM, OGG, or MOV).');
+    return;
+  }
+
   stopVideoFilePlayback();
 
   if (file.type.startsWith('video/')) {
@@ -587,8 +614,9 @@ function processImageFile(file) {
   });
 }
 
-function processVideoFile(file) {
+async function processVideoFile(file) {
   const url = URL.createObjectURL(file);
+  state.videoObjectUrl = url;
   DOM.uploadDropArea.hidden = true;
   DOM.uploadResultStage.hidden = false;
   DOM.uploadPreviewImage.hidden = true;
@@ -597,6 +625,13 @@ function processVideoFile(file) {
   const video = DOM.uploadPreviewVideo;
   video.src = url;
   video.load();
+  // Each uploaded recording starts with a clean server-side sequence and
+  // counters, so results belong to this video rather than the previous one.
+  try {
+    await fetch('/api/v1/reset_counters', { method: 'POST' });
+  } catch (e) {
+    // Continue playback if the reset endpoint is temporarily unavailable.
+  }
   video.play().catch(() => {});
 
   const offscreen = document.createElement('canvas');
@@ -649,6 +684,11 @@ function stopVideoFilePlayback() {
   if (DOM.uploadPreviewVideo) {
     DOM.uploadPreviewVideo.pause();
     DOM.uploadPreviewVideo.src = '';
+  }
+  state.isProcessingFrame = false;
+  if (state.videoObjectUrl) {
+    URL.revokeObjectURL(state.videoObjectUrl);
+    state.videoObjectUrl = null;
   }
 }
 
@@ -1387,7 +1427,7 @@ async function openExerciseModal(exerciseId) {
     }
     if (DOM.btnUploadExercise) {
       DOM.btnUploadExercise.onclick = () => {
-        startTrainingExercise(ex, 'upload');
+        startTrainingExercise(ex, 'video');
       };
     }
   } catch (err) {
