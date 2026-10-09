@@ -7,19 +7,21 @@ equipment data, and real-time rep counting for 26+ exercise types.
 from __future__ import annotations
 
 import json
+import math
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from exercise_engine import ExerciseAI
+from movement_schema import ACTION_FAMILY
 
 load_dotenv(Path(__file__).with_name(".env"))
 
@@ -56,7 +58,11 @@ async def lifespan(app: FastAPI):
         app.state.engine = None
         app.state.error = str(error)
         print(f"Error initializing ExerciseAI engine: {error}")
-    yield
+    try:
+        yield
+    finally:
+        if app.state.engine is not None:
+            app.state.engine.close()
 
 
 app = FastAPI(
@@ -79,16 +85,23 @@ app.add_middleware(
 
 
 @app.get("/api/v1/health", tags=["system"])
-async def health(request: Request) -> dict:
+async def health(request: Request) -> Any:
     engine: ExerciseAI | None = request.app.state.engine
     registry = request.app.state.registry
     if engine is None:
-        return {"status": "degraded", "message": request.app.state.error}
+        return JSONResponse(
+            status_code=503,
+            content={"status": "degraded", "model_loaded": False, "message": request.app.state.error},
+        )
     return {
         "status": "ok",
-        "model": "LSTM_Attention (MediaPipe Pose 33 Keypoints)",
+        "model": engine.model_info,
         "model_loaded": engine.model_loaded,
-        "actions": ["curl", "press", "squat"],
+        "actions": list(engine.ACTIONS),
+        "family_map": engine.family_map,
+        "equipment_detection": "not_trained",
+        "experimental": True,
+        "rep_counting": "experimental_heuristic_not_validated",
         "total_exercises": registry.get("total_exercises", 0),
         "rep_counting_supported": registry.get("rep_counting_supported", 0),
         "categories": list(registry.get("categories", {}).keys()),
@@ -97,10 +110,14 @@ async def health(request: Request) -> dict:
 
 
 @app.post("/api/v1/process_frame", tags=["exercise"])
-async def process_frame(request: Request, file: UploadFile = File(...)) -> dict:
+async def process_frame(
+    request: Request, file: UploadFile = File(...), timestamp_seconds: Optional[float] = Form(None)
+) -> dict:
     engine: ExerciseAI | None = request.app.state.engine
     if engine is None:
         raise HTTPException(status_code=503, detail="AI engine not loaded: " + str(request.app.state.error))
+    if timestamp_seconds is not None and (not math.isfinite(timestamp_seconds) or timestamp_seconds < 0):
+        raise HTTPException(status_code=422, detail="timestamp_seconds must be finite and nonnegative")
 
     contents = await file.read(MAX_UPLOAD_BYTES + 1)
     if not contents:
@@ -108,14 +125,17 @@ async def process_frame(request: Request, file: UploadFile = File(...)) -> dict:
     if len(contents) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="Frame size exceeds 10 MB limit.")
 
-    result = engine.process_frame(contents)
+    result = engine.process_frame(contents, timestamp_seconds=timestamp_seconds)
     return {"status": "success", "data": result}
 
 
 # Backward compatibility for analyze endpoint
 @app.post("/api/v1/analyze", include_in_schema=False)
-async def analyze_alias(request: Request, file: UploadFile = File(...), confidence: float = 0.35) -> dict:
-    return await process_frame(request, file)
+async def analyze_alias(
+    request: Request, file: UploadFile = File(...), confidence: float = 0.35,
+    timestamp_seconds: Optional[float] = Form(None),
+) -> dict:
+    return await process_frame(request, file, timestamp_seconds)
 
 
 @app.post("/api/v1/reset_counters", tags=["exercise"])
@@ -155,10 +175,17 @@ async def get_stats(request: Request) -> dict:
     return {
         "status": "success",
         "current_action": engine.current_action,
+        "display_name": engine.current_action.replace("_", " ").title(),
         "confidence": engine.current_confidence,
         "counters": engine.counters,
         "stages": engine.stages,
         "probabilities": engine.last_probabilities,
+        "family": ACTION_FAMILY.get(engine.current_action, "unknown"),
+        "equipment": "unknown",
+        "equipment_detection": "not_trained",
+        "experimental": True,
+        "model_info": engine.model_info,
+        "rep_counting": "experimental_heuristic_not_validated",
     }
 
 
