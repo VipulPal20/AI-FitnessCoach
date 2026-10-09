@@ -341,6 +341,7 @@ body {
 
 .mode-tabs {
   display: flex;
+  flex-wrap: wrap;
   background: var(--bg-inset);
   padding: 4px;
   border-radius: var(--radius-full);
@@ -2209,4 +2210,224 @@ body {
   .app-header { padding: 0 16px; }
   .main-container { padding: 0 16px; }
   .footer-inner { flex-direction: column; align-items: flex-start; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EDITORIAL SYSTEM / MOTION CONSOLE REDESIGN
+   Hard edges, signal orange, acid lime, and data-led negative space.
+   Keep IDs and behavior selectors stable; this layer is visual only.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --bg-void: #101210;
+  --bg-paper: #e8e5dc;
+  --bg-ink: #171a17;
+  --bg-card: #20251f;
+  --bg-card-2: #282d26;
+  --ink: #f4f0e6;
+  --ink-dim: #a8afa2;
+  --ink-dark: #171a17;
+  --line: rgba(244, 240, 230, .18);
+  --line-strong: rgba(244, 240, 230, .42);
+  --signal: #ff5b2e;
+  --signal-hot: #ff7546;
+  --acid: #d8ff42;
+  --cyan: #8ce9dc;
+  --display: 'Syne', 'Plus Jakarta Sans', sans-serif;
+  --body: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --shadow-hard: 7px 7px 0 rgba(0, 0, 0, .32);
+}
+
+html { background: var(--bg-void); scroll-behavior: smooth; }
+body {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px) 0 0 / 48px 48px,
+    var(--bg-void);
+  color: var(--ink);
+  font-family: var(--body);
+  letter-spacing: -.01em;
+}
+body::before {
+  content: 'FITNESS / COACH / 2026';
+  position: fixed;
+  top: 50%;
+  left: -58px;
+  z-index: 0;
+  color: rgba(216,255,66,.24);
+  font: 700 10px var(--mono);
+  letter-spacing: .22em;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+.ambient-glow {
+  width: 42vw;
+  height: 42vw;
+  top: -18vw;
+  right: -12vw;
+  background: var(--signal);
+  filter: blur(110px);
+  opacity: .14;
+}
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  min-height: 72px;
+  padding: 0 34px;
+  background: rgba(16,18,16,.92);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(18px);
+}
+.header-logo { width: 156px; filter: grayscale(1) brightness(2); }
+.brand-badge { border-right: 1px solid var(--line); padding-right: 28px; }
+.header-nav { gap: 4px; }
+.nav-pill, .mode-tab, .action-btn, .control-toggle {
+  border-radius: 0;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: 10px;
+}
+.nav-pill { color: var(--ink-dim); padding: 9px 12px; }
+.nav-pill:hover, .nav-pill.active { color: var(--acid); background: transparent; }
+.header-right { gap: 8px; }
+.session-stat-pill, .status-indicator-pill {
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  min-height: 34px;
+}
+.session-stat-pill .stat-label { color: var(--ink-dim); }
+.session-stat-pill .stat-value { color: var(--ink); font-family: var(--mono); }
+.status-indicator-pill { color: var(--acid); }
+.status-dot { background: var(--acid); box-shadow: 0 0 0 3px rgba(216,255,66,.12); }
+.action-btn { background: var(--signal); border: 1px solid var(--signal); color: #190c07; font-weight: 800; }
+.action-btn:hover { background: var(--signal-hot); transform: translate(-2px, -2px); box-shadow: 3px 3px 0 var(--acid); }
+.main-container { position: relative; z-index: 1; max-width: 1500px; padding: 34px 34px 90px; }
+.studio-section { padding-top: 0; }
+.arena-section, .page-section, .panel-surface {
+  background: var(--bg-ink);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: var(--shadow-hard);
+}
+.arena-section { padding: 28px; }
+.studio-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 32px;
+  padding: 10px 4px 34px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+.intro-kicker, .section-eyebrow { color: var(--acid); font: 700 10px var(--mono); letter-spacing: .13em; text-transform: uppercase; }
+.intro-kicker span { color: var(--signal); margin-right: 9px; }
+.studio-intro h1 { max-width: 720px; margin: 20px 0 15px; color: var(--ink); font: 800 clamp(42px, 7vw, 94px)/.87 var(--display); letter-spacing: -.075em; }
+.studio-intro h1 em { color: var(--signal); font-style: normal; }
+.intro-description { max-width: 460px; color: var(--ink-dim); font-size: 15px; line-height: 1.55; }
+.intro-index { align-self: end; display: grid; grid-template-columns: 1fr; gap: 0; border-left: 1px solid var(--line); }
+.intro-index div { display: flex; align-items: baseline; justify-content: space-between; padding: 13px 0 13px 18px; border-bottom: 1px solid var(--line); }
+.intro-index-label { color: var(--ink-dim); font: 10px var(--mono); letter-spacing: .1em; }
+.intro-index strong { color: var(--acid); font: 700 16px var(--display); }
+.arena-toolbar { padding: 0 0 16px; }
+.mode-tabs { background: transparent; border: 1px solid var(--line); border-radius: 0; padding: 0; gap: 0; }
+.mode-tab { color: var(--ink-dim); border-right: 1px solid var(--line); padding: 12px 15px; }
+.mode-tab:last-child { border-right: 0; }
+.mode-tab:hover { color: var(--ink); background: var(--bg-card); }
+.mode-tab.active { color: var(--ink-dark); background: var(--acid); box-shadow: none; }
+.arena-controls { gap: 5px; }
+.control-toggle { border: 1px solid var(--line); color: var(--ink-dim); padding: 10px 11px; }
+.control-toggle:hover { color: var(--acid); border-color: var(--acid); }
+.studio-workspace { grid-template-columns: minmax(0, 1fr) 330px; gap: 24px; }
+.video-stage { border: 1px solid var(--line-strong); border-radius: 0; background: #0b0d0b; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); }
+.video-stage::after { content: 'LIVE / TRACKING'; position: absolute; top: 14px; left: 14px; z-index: 4; padding: 5px 7px; background: var(--signal); color: #160a06; font: 800 9px var(--mono); letter-spacing: .1em; }
+.camera-welcome-overlay { background: rgba(16,18,16,.72); }
+.welcome-box { max-width: 560px; border: 1px solid var(--line-strong); border-radius: 0; background: var(--bg-card); box-shadow: var(--shadow-hard); }
+.welcome-box h2, .section-title, .panel-title, .modal-title { font-family: var(--display); letter-spacing: -.045em; }
+.welcome-icon { color: var(--signal); }
+.btn-glow-primary, .btn-train-now { border-radius: 0; background: var(--signal); color: #180a06; border: 1px solid var(--signal); box-shadow: 4px 4px 0 var(--acid); font-family: var(--mono); text-transform: uppercase; letter-spacing: .07em; font-weight: 800; }
+.btn-glow-primary:hover, .btn-train-now:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--acid); }
+.btn-subtle, .btn-train-upload { border-radius: 0; border: 1px solid var(--line-strong); color: var(--ink); background: transparent; font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+.btn-subtle:hover, .btn-train-upload:hover { border-color: var(--acid); color: var(--acid); }
+.hud-pill, .hud-stage-pill, .hud-coach-pill, .active-exercise-hud { border-radius: 0; border: 1px solid var(--line-strong); background: rgba(23,26,23,.92); box-shadow: 4px 4px 0 rgba(0,0,0,.25); }
+.hud-pill { color: var(--acid); }
+.hud-stage-pill { color: var(--signal); }
+.arena-footer { border-top: 1px solid var(--line); }
+.studio-live-insights { gap: 10px; }
+.studio-insight-card, .telemetry-panel, .workout-card, .joint-card, .coach-panel { border: 1px solid var(--line); border-radius: 0; background: var(--bg-card); box-shadow: none; }
+.studio-insight-card { padding: 19px; }
+.studio-insight-card::before, .telemetry-panel::before { background: var(--signal); }
+.panel-header { border-bottom: 1px solid var(--line); }
+.panel-title { color: var(--ink); }
+.panel-pill, .phase-chip { border-radius: 0; font-family: var(--mono); }
+.phase-chip.up { color: var(--acid); border-color: var(--acid); background: transparent; }
+.phase-chip.down { color: var(--signal); border-color: var(--signal); background: transparent; }
+.section-header-block { border-left: 4px solid var(--signal); padding-left: 18px; }
+.section-title { color: var(--ink); font-size: clamp(30px, 4vw, 54px); }
+.section-desc { color: var(--ink-dim); }
+.page-section { padding: 28px; margin-top: 28px; }
+.exercise-cards-strip { gap: 14px; }
+.workout-card { border-top: 4px solid var(--signal); padding: 20px; transition: transform .2s, border-color .2s; }
+.workout-card:nth-child(2) { border-top-color: var(--acid); transform: translateY(18px); }
+.workout-card:nth-child(3) { border-top-color: var(--cyan); }
+.workout-card:hover, .workout-card.active { border-color: var(--acid); transform: translateY(-4px); }
+.workout-card:nth-child(2):hover, .workout-card:nth-child(2).active { transform: translateY(14px); }
+.exercise-icon-badge { border-radius: 0; background: var(--signal); color: #170a06; }
+.rep-display .rep-number { color: var(--acid); font-family: var(--display); }
+.progress-track, .meter-track { height: 5px; border-radius: 0; background: #111511; border: 1px solid var(--line); }
+.progress-fill, .meter-fill { border-radius: 0; background: var(--signal); }
+.kinematics-dashboard-grid { gap: 14px; }
+.telemetry-panel { padding: 22px; }
+.meter-fill.curl, #probCurlBar, #studioProbCurlBar { background: var(--signal); }
+.meter-fill.press, #probPressBar, #studioProbPressBar { background: var(--acid); }
+.meter-fill.squat, #probSquatBar, #studioProbSquatBar { background: var(--cyan); }
+.joint-card { padding: 15px; }
+.joint-card .angle-value { color: var(--acid); font-family: var(--display); }
+.coach-panel { background: var(--signal); color: #1b0b07; }
+.coach-panel * { color: inherit; }
+.library-viewport { border: 1px solid var(--line); background: var(--bg-ink); }
+.library-toolbar, .library-results-header { border-bottom-color: var(--line); }
+.library-search-box, .filter-select, .filter-toggle-chip { border-radius: 0; border-color: var(--line-strong); background: var(--bg-card); color: var(--ink); }
+.library-exercise-grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+.exercise-lib-card { border-radius: 0; border: 1px solid var(--line); background: var(--bg-card); }
+.exercise-lib-card:hover { border-color: var(--acid); transform: translateY(-4px) rotate(-.5deg); }
+.card-thumb { border-radius: 0; filter: saturate(.8) contrast(1.08); }
+.card-label, .card-chip { border-radius: 0; font-family: var(--mono); }
+.exercise-modal-backdrop { background: rgba(0,0,0,.82); }
+.exercise-modal-content { border: 1px solid var(--line-strong); border-radius: 0; background: var(--bg-card); box-shadow: 10px 10px 0 rgba(0,0,0,.35); }
+.detail-badge { border-radius: 0; }
+.footer { border-top: 1px solid var(--line); background: var(--bg-ink); }
+
+@media (max-width: 1080px) {
+  .studio-workspace { grid-template-columns: 1fr; }
+  .studio-intro { grid-template-columns: 1fr; }
+  .intro-index { max-width: 520px; grid-template-columns: repeat(3, 1fr); border-left: 0; border-top: 1px solid var(--line); }
+  .intro-index div { display: block; padding: 12px 12px 12px 0; border-bottom: 0; }
+  .intro-index strong { display: block; margin-top: 5px; }
+}
+@media (max-width: 700px) {
+  body::before { display: none; }
+  .app-header { padding: 12px 16px; align-items: flex-start; gap: 10px; }
+  .brand-badge { border-right: 0; padding-right: 0; }
+  .header-logo { width: 130px; }
+  .header-right { flex-wrap: wrap; justify-content: flex-end; }
+  .session-stat-pill { display: none; }
+  .main-container { padding: 18px 12px 60px; }
+  .arena-section, .page-section { padding: 16px; }
+  .studio-intro { padding-bottom: 22px; }
+  .studio-intro h1 { font-size: clamp(42px, 15vw, 72px); }
+  .intro-index { width: 100%; }
+  .intro-index-label { font-size: 8px; }
+  .intro-index strong { font-size: 13px; }
+  .arena-toolbar { align-items: stretch; }
+  .mode-tabs { width: 100%; }
+  .mode-tab { flex: 1 1 45%; justify-content: center; border-bottom: 1px solid var(--line); }
+  .arena-controls { width: 100%; justify-content: space-between; }
+  .control-toggle { flex: 1; justify-content: center; padding: 8px 4px; }
+  .welcome-box { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; }
+  .welcome-box h2, .welcome-box p { max-width: 100%; }
+  .prompt-btn-group { width: 100%; flex-wrap: wrap; justify-content: center; }
+  .prompt-btn-group > button { flex: 0 0 auto; width: auto; min-width: 120px; max-width: 100%; white-space: nowrap; }
+  .workout-card:nth-child(2) { transform: none; }
+  .workout-card:nth-child(2):hover, .workout-card:nth-child(2).active { transform: translateY(-4px); }
 }
