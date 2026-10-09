@@ -6,14 +6,14 @@
   <strong>AI Based Fitness Evaluator & Real-Time Exercise Trainer Engine</strong>
 </p>
 
-An AI-powered computer vision application for real-time exercise classification, pose estimation, joint kinematic analysis, and repetition counting across 1,324+ gym exercises. Built with **FastAPI**, **MediaPipe Pose**, **TensorFlow / Keras Attention-LSTM**, and **OpenCV**, featuring an interactive web dashboard.
+An AI-powered computer vision application for real-time exercise classification, pose estimation, joint kinematic analysis, and repetition counting across 1,324+ gym exercises. Built with **FastAPI**, **MediaPipe Pose**, a fitted **scikit-learn Decision Tree**, and **OpenCV**, featuring an interactive web dashboard.
 
 ---
 
 ## ✨ Key Features
 
 - 🏋️ **Real-Time Exercise Recognition**: Detects **Bicep Curls**, **Overhead Press**, and **Squats** using a 30-frame sequence window.
-- 🧠 **Bidirectional Attention-LSTM Model**: Custom deep neural network leveraging spatial-temporal attention on 33 MediaPipe 3D pose keypoints.
+- 🧠 **Fitted Decision-Tree Model**: Interpretable classifier trained on shoulder, elbow, hip, and knee angle features.
 - 🔢 **Automated Repetition Counter**: State machine heuristics (`UP` / `DOWN` stages) for accurate rep tracking.
 - 📐 **Kinematic Joint Angle & Form Analysis**: Calculates elbow flex, shoulder extension, knee angles, and posture in real time.
 - 💻 **Interactive Web Dashboard**: Modern responsive web interface with live webcam feed, video upload, sample video playback, skeletal overlay canvas, and real-time stats.
@@ -28,10 +28,10 @@ An AI-powered computer vision application for real-time exercise classification,
 ┌─────────────────┐       ┌──────────────────────┐       ┌────────────────────────┐
 │  Camera / Video │ ────> │ MediaPipe Pose Task  │ ────> │ 33 3D Pose Keypoints   │
 └─────────────────┘       └──────────────────────┘       └───────────┬────────────┘
-                                                                     │ (Sequence = 30)
+                                                                      │ (angle features)
                                                                      ▼
 ┌─────────────────┐       ┌──────────────────────┐       ┌────────────────────────┐
-│ Interactive UI  │ <──── │ Rep Counter Engine   │ <──── │ Attention-LSTM Model   │
+│ Interactive UI  │ <──── │ Rep Counter Engine   │ <──── │ Fitted Decision Tree   │
 └─────────────────┘       └──────────────────────┘       └────────────────────────┘
 ```
 
@@ -42,12 +42,13 @@ An AI-powered computer vision application for real-time exercise classification,
 ```
 opencv_project/
 ├── app.py                         # FastAPI server & REST API endpoints
-├── exercise_engine.py             # Core AI engine (MediaPipe, Attention-LSTM, Rep Counter)
+├── exercise_engine.py             # Core AI engine (MediaPipe, Decision Tree, Rep Counter)
+├── exercise_classifier.joblib     # Fitted Decision Tree artifact
 ├── requirements.txt               # Python package dependencies
 ├── models/
 │   ├── pose_landmarker.task       # MediaPipe Pose Landmarker task binary
-│   ├── LSTM_Attention.h5          # Trained Attention-LSTM neural network weights
-│   └── LSTM.h5                    # Baseline LSTM model weights
+│   ├── LSTM_Attention.h5          # Legacy weights (not used by the live engine)
+│   └── LSTM.h5                    # Legacy weights (not used by the live engine)
 ├── frontend/                      # Web Application
 │   ├── index.html                 # Dashboard layout
 │   ├── styles.css                 # Custom CSS styling
@@ -117,15 +118,12 @@ Navigate to:
 
 ---
 
-## 🧠 Neural Network Model Details
+## 🧠 Decision-Tree Model Details
 
-- **Input Dimension**: `(Batch, 30 Time Steps, 132 Features)` representing 33 MediaPipe 3D pose keypoints `[x, y, z, visibility]`.
-- **Architecture**:
-  1. `Bidirectional(LSTM(256, return_sequences=True))`
-  2. Custom Softmax Attention Block across time steps
-  3. `Dense(512, activation='relu')` with `Dropout(0.5)`
-  4. `Dense(3, activation='softmax')` output layer
-- **Output Classes**: `bicep_curl`, `overhead_press`, `squat`
+- **Input Features**: Average left/right shoulder, elbow, hip, and knee angles.
+- **Estimator**: Fitted `DecisionTreeClassifier(max_depth=6, min_samples_leaf=8)`.
+- **Output Classes**: `curl`, `press`, `squat`.
+- **Stability**: A prediction must remain stable for three frames before it can drive the rep state machine.
 
 ---
 
