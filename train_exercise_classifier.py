@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 
 import joblib
-from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
@@ -22,6 +22,7 @@ from sklearn.pipeline import Pipeline
 
 FEATURE_COLUMNS = ["Side", "Shoulder_Angle", "Elbow_Angle", "Hip_Angle", "Knee_Angle"]
 TARGET_COLUMN = "Label"
+LABEL_MAP = {"Pull ups": "curl", "Push Ups": "press", "Squats": "squat"}
 
 
 def train(data_path: Path, output_path: Path) -> dict[str, object]:
@@ -33,29 +34,39 @@ def train(data_path: Path, output_path: Path) -> dict[str, object]:
     if missing:
         raise ValueError(f"Dataset is missing columns: {', '.join(sorted(missing))}")
 
+    # The supplied angle dataset contains several exercises, but the live
+    # counter supports these three actions.  Train only on the compatible
+    # labels and keep the mapping explicit in the fitted artifact.
+    compatible_rows = [row for row in rows if row[TARGET_COLUMN].strip() in LABEL_MAP]
     features = [
-        {"Side": row["Side"].strip().lower(), **{column: float(row[column]) for column in FEATURE_COLUMNS[1:]}}
-        for row in rows
+        {"Side": "average", **{column: float(row[column]) for column in FEATURE_COLUMNS[1:]}}
+        for row in compatible_rows
     ]
-    target = [row[TARGET_COLUMN].strip() for row in rows]
+    target = [LABEL_MAP[row[TARGET_COLUMN].strip()] for row in compatible_rows]
     x_train, x_test, y_train, y_test = train_test_split(
         features, target, test_size=0.2, random_state=42, stratify=target
     )
     model = Pipeline(
         [
             ("vectorize", DictVectorizer(sparse=False)),
-            ("classifier", HistGradientBoostingClassifier(max_iter=250, learning_rate=0.08, max_leaf_nodes=31, random_state=42)),
+                ("classifier", DecisionTreeClassifier(max_depth=6, min_samples_leaf=8, random_state=42)),
         ]
     )
     model.fit(x_train, y_train)
     predicted = model.predict(x_test)
     accuracy = accuracy_score(y_test, predicted)
     report = classification_report(y_test, predicted, output_dict=True, zero_division=0)
-    artifact = {"model": model, "features": FEATURE_COLUMNS, "labels": sorted(set(target))}
+    artifact = {
+        "model": model,
+        "features": FEATURE_COLUMNS,
+        "labels": sorted(set(target)),
+        "model_type": "decision_tree",
+        "label_map": LABEL_MAP,
+    }
     joblib.dump(artifact, output_path)
 
     metrics: dict[str, object] = {
-        "rows": len(rows),
+        "rows": len(compatible_rows),
         "labels": artifact["labels"],
         "test_accuracy": round(float(accuracy), 4),
         "classification_report": report,
