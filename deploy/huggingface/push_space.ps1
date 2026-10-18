@@ -18,7 +18,10 @@ $staging = Join-Path ([System.IO.Path]::GetTempPath()) ("fitnesscoach-space-" + 
 
 Write-Host "Exporting HEAD of $root ..."
 New-Item -ItemType Directory -Path $staging | Out-Null
-git -C $root archive --format=tar HEAD | tar -x -C $staging
+$tarFile = Join-Path ([System.IO.Path]::GetTempPath()) ("fitnesscoach-" + [guid]::NewGuid().ToString('N') + ".tar")
+git -C $root archive --format=tar --output=$tarFile HEAD
+tar -x -C $staging -f $tarFile
+Remove-Item -Force $tarFile
 
 # The Space reads its settings from the YAML header at the top of README.md.
 $header = Get-Content (Join-Path $root 'deploy\huggingface\SPACE_HEADER.md') -Raw
@@ -28,10 +31,17 @@ Set-Content -Path $readme -Value ($header + (Get-Content $readme -Raw)) -Encodin
 Push-Location $staging
 try {
     git init --quiet --initial-branch=main
+    # Hugging Face refuses binary files in plain git; store them with Git LFS.
+    git lfs install --local | Out-Null
+    $binary = @('*.png', '*.jpg', '*.jpeg', '*.webp', '*.gif', '*.svg', '*.webm', '*.mp4',
+                '*.task', '*.joblib', '*.pkl', '*.ico', '*.woff', '*.woff2', '*.ttf')
+    foreach ($pattern in $binary) { git lfs track $pattern | Out-Null }
+    git add .gitattributes
     git add -A
     git -c user.name="FitnessCoach deploy" -c user.email="deploy@localhost" commit --quiet -m "Deploy FitnessCoach"
     Write-Host "Pushing to https://huggingface.co/spaces/$Space ..."
     git push --force "https://huggingface.co/spaces/$Space" main
+    if ($LASTEXITCODE -ne 0) { throw "Push to Hugging Face failed (see the messages above)." }
     Write-Host "Done. Build logs and the live app: https://huggingface.co/spaces/$Space"
 }
 finally {
