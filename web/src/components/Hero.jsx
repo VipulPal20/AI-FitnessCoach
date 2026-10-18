@@ -85,7 +85,7 @@ export default function Hero() {
         </div>
 
         <figcaption>
-          A real {move} from the training footage, replayed from MediaPipe&apos;s 3D landmarks. Move your cursor to turn the figure.
+          A real {move} from the training footage, replayed from MediaPipe&apos;s 3D landmarks. Move your cursor, or drag on a phone, to turn the figure.
         </figcaption>
       </motion.figure>
     </section>

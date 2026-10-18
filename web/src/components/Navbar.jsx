@@ -101,7 +101,7 @@ export default function Navbar() {
                   exit={{ opacity: 0, scale: 0.8 }}
                 >
                   <span className="live-dot" aria-hidden="true" />
-                  <span className="tnum">{totalReps}</span> reps
+                  <span className="tnum">{totalReps}</span> {totalReps === 1 ? 'rep' : 'reps'}
                 </motion.span>
               ) : (
                 <motion.span
@@ -158,7 +158,7 @@ export default function Navbar() {
                 </motion.a>
               ))}
             </nav>
-            <p className="mobile-menu-foot">{statusText}{running ? ` · ${totalReps} reps this session` : ''}</p>
+            <p className="mobile-menu-foot">{statusText}{running ? ` · ${totalReps} ${totalReps === 1 ? 'rep' : 'reps'} this session` : ''}</p>
           </motion.div>
         )}
       </AnimatePresence>

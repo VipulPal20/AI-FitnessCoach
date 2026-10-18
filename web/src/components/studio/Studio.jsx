@@ -37,7 +37,7 @@ export default function Studio() {
       <div className="studio-head">
         <Reveal as="h2" className="section-title">The studio.</Reveal>
         <Reveal as="p" className="section-lede" delay={0.08}>
-          Train in front of the camera, run a recording through it, or check a single pose. The numbers on the right update about ten times a second.
+          Train in front of the camera, run a recording through it, or check a single pose. The live numbers update about ten times a second.
         </Reveal>
       </div>
 

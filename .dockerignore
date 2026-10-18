@@ -1,0 +1,10 @@
+.git
+.venv
+.env
+__pycache__
+*.pyc
+exercises-dataset
+exercise_registry.json
+web/node_modules
+web/dist
+*.log

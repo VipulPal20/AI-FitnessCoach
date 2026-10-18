@@ -87,7 +87,11 @@ export function drawSkeleton(canvas, source, landmarks, angles, { frame, mirrore
   }
 
   if (showAngles && angles) {
-    ctx.font = '600 13px "Instrument Sans", system-ui, sans-serif';
+    // Shrink the tags on small previews so neighbouring joints stay readable.
+    const size = Math.max(10, Math.min(13, drawW / 40));
+    const pad = size * 0.45;
+    const height = size * 1.7;
+    ctx.font = `600 ${size}px "Instrument Sans", system-ui, sans-serif`;
     ctx.textBaseline = 'middle';
     for (const [id, key] of ANGLE_TAGS) {
       const lm = byId.get(id);
@@ -95,13 +99,13 @@ export function drawSkeleton(canvas, source, landmarks, angles, { frame, mirrore
       if (!lm || lm.visibility < VISIBLE || value === undefined) continue;
       const [x, y] = point(lm);
       const text = `${Math.round(value)}°`;
-      const width = ctx.measureText(text).width + 12;
+      const width = ctx.measureText(text).width + pad * 2;
       ctx.fillStyle = '#121412';
       ctx.beginPath();
-      ctx.roundRect(x + 10, y - 11, width, 22, 11);
+      ctx.roundRect(x + radius + 4, y - height / 2, width, height, height / 2);
       ctx.fill();
       ctx.fillStyle = '#f3f3ef';
-      ctx.fillText(text, x + 16, y);
+      ctx.fillText(text, x + radius + 4 + pad, y);
     }
   }
 }

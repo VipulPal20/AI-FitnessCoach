@@ -1,0 +1,18 @@
+# Render Blueprint: one Docker web service serves the API, the React UI,
+# the classic UI (/classic/) and the exercise library.
+# Deploy: Render dashboard -> New -> Blueprint -> pick this repository.
+services:
+  - type: web
+    name: fitnesscoach
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    # Free plan: 0.1 CPU and 512 MB RAM. It sleeps after 15 minutes idle
+    # (first visit then takes about a minute) and analyses frames slowly,
+    # so live camera tracking is laggy; "starter" is faster if ever needed.
+    plan: free
+    region: singapore
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"

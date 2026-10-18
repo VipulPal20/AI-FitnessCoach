@@ -110,7 +110,7 @@ function Figure({ clip, fps, onSample, pointer }) {
 // rotation is given, so tilt it to look at the middle of a standing body,
 // CAMERA_AIM metres up, from the very first frame.
 const CAMERA_POSITION = [0, 0.95, 3.6];
-const CAMERA_AIM = 0.72;
+const CAMERA_AIM = 0.58;
 const CAMERA_TILT = -Math.atan2(CAMERA_POSITION[1] - CAMERA_AIM, CAMERA_POSITION[2]);
 
 /**

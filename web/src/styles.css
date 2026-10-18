@@ -553,7 +553,7 @@ input[type='search'] { background-image: none; padding-right: 18px; width: 100%;
 
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 112px; }
-  .hero-stage { aspect-ratio: 4 / 4.6; max-height: none; }
+  .hero-stage { aspect-ratio: 1; max-height: none; }
   .how-body { grid-template-columns: 1fr; }
   .how-visual { display: none; }
   .how-step { min-height: auto; opacity: 1; padding-bottom: 72px; }
@@ -567,14 +567,16 @@ input[type='search'] { background-image: none; padding-right: 18px; width: 100%;
 @media (max-width: 640px) {
   .nav-cta, .nav-status { display: none; }
   .hero-title { font-size: clamp(56px, 17vw, 84px); }
-  .hero-readout { left: 14px; right: 14px; bottom: 56px; gap: 6px; }
+  /* Too narrow to overlay the readout on the figure: stack it underneath. */
+  .hero-stage { aspect-ratio: auto; display: flex; flex-direction: column; }
+  .skeleton-scene { position: relative; inset: auto; height: min(112vw, 460px); }
+  .hero-readout { position: static; margin: 0 12px; gap: 6px; }
   .hero-readout > div { padding: 10px 12px; }
-  .hero-switch { left: 14px; top: 14px; }
-  .hero-stage figcaption { left: 14px; right: 14px; bottom: 14px; font-size: 12px; }
+  .hero-switch { left: 12px; top: 12px; }
+  .hero-stage figcaption { position: static; padding: 12px 14px 16px; font-size: 12px; }
   .cockpit { display: flex; }
   .cockpit-rep-number { font-size: 88px; }
   .dropzone { aspect-ratio: auto; min-height: 380px; }
-  .viewport { aspect-ratio: 3 / 4; }
   .library-controls { grid-template-columns: 1fr; }
   .library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .ex-card { padding: 8px 8px 14px; border-radius: 18px; }
