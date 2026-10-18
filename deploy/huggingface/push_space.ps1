@@ -24,9 +24,13 @@ tar -x -C $staging -f $tarFile
 Remove-Item -Force $tarFile
 
 # The Space reads its settings from the YAML header at the top of README.md.
-$header = Get-Content (Join-Path $root 'deploy\huggingface\SPACE_HEADER.md') -Raw
+# Read and write explicitly as UTF-8 without a BOM: Windows PowerShell's
+# defaults garble the emoji and break the YAML header.
+$utf8 = New-Object System.Text.UTF8Encoding($false)
+$header = [System.IO.File]::ReadAllText((Join-Path $root 'deploy\huggingface\SPACE_HEADER.md'), $utf8)
 $readme = Join-Path $staging 'README.md'
-Set-Content -Path $readme -Value ($header + (Get-Content $readme -Raw)) -Encoding utf8 -NoNewline
+$body = [System.IO.File]::ReadAllText($readme, $utf8)
+[System.IO.File]::WriteAllText($readme, $header + $body, $utf8)
 
 Push-Location $staging
 try {
