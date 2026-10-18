@@ -1,0 +1,7 @@
+# Extra dependencies for dataset preparation and model training scripts.
+# Install the runtime set first: pip install -r requirements.txt
+-r requirements.txt
+kagglehub>=0.3      # prepare_starter_data.py
+requests>=2.31      # prepare_starter_data.py
+ultralytics>=8.3    # train_exercise_yolo.py, vision.py (legacy YOLO pipeline)
+torch>=2.2          # vision.py (legacy YOLO pipeline)

@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FitnessCoach — AI Based Fitness Evaluator & Trainer</title>
-  <link rel="icon" type="image/svg+xml" href="/assets/fitnesscoach-logo.svg">
+  <link rel="icon" type="image/svg+xml" href="assets/fitnesscoach-logo.svg">
   <!-- Distinctive editorial typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="styles.css?v=3.3">
 </head>
 <body>
   <div class="ambient-glow"></div>
@@ -18,7 +18,7 @@
   <header class="app-header">
     <div class="header-left">
       <a href="/" class="brand-badge" title="FitnessCoach — AI based Fitness evaluator and trainer">
-        <img src="/assets/fitnesscoach-logo.svg" alt="FitnessCoach — AI based Fitness evaluator and trainer" class="header-logo">
+        <img src="assets/fitnesscoach-logo.svg" alt="FitnessCoach — AI based Fitness evaluator and trainer" class="header-logo">
       </a>
     </div>
 
@@ -244,8 +244,9 @@
               <!-- 1-Click Sample Previews -->
               <div class="sample-pills-row">
                 <span>Instant Demos:</span>
-                <button id="sampleSquatBtn" class="sample-chip" type="button">⚡ Squat Sample</button>
-                <button id="samplePressBtn" class="sample-chip" type="button">⚡ Shoulder Press Sample</button>
+                <button id="sampleVideoBtn" class="sample-chip" type="button">▶ Squat Video (rep demo)</button>
+                <button id="sampleSquatBtn" class="sample-chip" type="button">📷 Squat Photo</button>
+                <button id="samplePressBtn" class="sample-chip" type="button">📷 Press Photo</button>
               </div>
             </div>
           </div>
@@ -255,6 +256,8 @@
             <img id="uploadPreviewImage" alt="Analyzed workout pose" hidden>
             <video id="uploadPreviewVideo" playsinline controls loop hidden></video>
             <canvas id="uploadCanvas"></canvas>
+
+            <p id="uploadAnalysisNote" class="upload-analysis-note" hidden></p>
 
             <div class="upload-stage-actions">
               <button id="changeFileBtn" class="btn-subtle" type="button">Choose Different File</button>
@@ -322,6 +325,22 @@
             <div class="progress-track">
               <div id="studioProgressBar" class="progress-fill" style="width: 0%;"></div>
             </div>
+            <label class="rep-target-picker" for="repTargetSelect">
+              <span class="insight-label">COUNT REPS FOR</span>
+              <select id="repTargetSelect" class="filter-select">
+                <option value="">Auto-detect (AI classifier)</option>
+                <option value="squat">Squat</option>
+                <option value="lunge">Lunge</option>
+                <option value="deadlift">Deadlift</option>
+                <option value="push_up">Push-up</option>
+                <option value="bench_press">Bench Press</option>
+                <option value="shoulder_press">Shoulder Press</option>
+                <option value="bicep_curl">Bicep Curl</option>
+                <option value="pull_up">Pull-up</option>
+                <option value="row">Row</option>
+                <option value="jumping_jack">Jumping Jack</option>
+              </select>
+            </label>
           </div>
 
           <!-- 2. AI Form Coach Live Cue Box -->
@@ -376,23 +395,23 @@
           <div class="studio-insight-card">
             <div class="insight-card-header">
               <span class="insight-label">MOTION CLASSIFIER</span>
-              <span class="panel-pill">Neural</span>
+              <span class="panel-pill">Top 3</span>
             </div>
             <div class="studio-confidence-mini">
               <div class="conf-item">
-                <span class="conf-name">Curl</span>
-                <div class="conf-track"><div id="studioProbCurlBar" class="meter-fill curl" style="width: 0%;"></div></div>
-                <span id="studioProbCurlLabel" class="conf-pct">0%</span>
+                <span id="studioProb1Name" class="conf-name">—</span>
+                <div class="conf-track"><div id="studioProb1Bar" class="meter-fill curl" style="width: 0%;"></div></div>
+                <span id="studioProb1Label" class="conf-pct">0%</span>
               </div>
               <div class="conf-item">
-                <span class="conf-name">Press</span>
-                <div class="conf-track"><div id="studioProbPressBar" class="meter-fill press" style="width: 0%;"></div></div>
-                <span id="studioProbPressLabel" class="conf-pct">0%</span>
+                <span id="studioProb2Name" class="conf-name">—</span>
+                <div class="conf-track"><div id="studioProb2Bar" class="meter-fill press" style="width: 0%;"></div></div>
+                <span id="studioProb2Label" class="conf-pct">0%</span>
               </div>
               <div class="conf-item">
-                <span class="conf-name">Squat</span>
-                <div class="conf-track"><div id="studioProbSquatBar" class="meter-fill squat" style="width: 0%;"></div></div>
-                <span id="studioProbSquatLabel" class="conf-pct">0%</span>
+                <span id="studioProb3Name" class="conf-name">—</span>
+                <div class="conf-track"><div id="studioProb3Bar" class="meter-fill squat" style="width: 0%;"></div></div>
+                <span id="studioProb3Label" class="conf-pct">0%</span>
               </div>
             </div>
           </div>
@@ -700,7 +719,7 @@
   <footer class="app-footer">
     <div class="footer-inner">
       <div class="footer-brand">
-        <img src="/assets/fitnesscoach-logo.svg" alt="FitnessCoach Logo" height="34">
+        <img src="assets/fitnesscoach-logo.svg" alt="FitnessCoach Logo" height="34">
         <p>FitnessCoach — AI Based Fitness Evaluator and Real-Time Exercise Trainer Engine</p>
       </div>
       <div class="footer-meta">
@@ -709,6 +728,6 @@
     </div>
   </footer>
 
-  <script src="/app.js" defer></script>
+  <script src="app.js?v=3.3" defer></script>
 </body>
 </html>

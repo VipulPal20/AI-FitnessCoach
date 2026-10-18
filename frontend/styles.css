@@ -688,7 +688,7 @@ body {
 
 .conf-item {
   display: grid;
-  grid-template-columns: 44px 1fr 32px;
+  grid-template-columns: 96px 1fr 34px;
   align-items: center;
   gap: 8px;
   font-size: 11px;
@@ -2430,4 +2430,30 @@ body::before {
   .prompt-btn-group > button { flex: 0 0 auto; width: auto; min-width: 120px; max-width: 100%; white-space: nowrap; }
   .workout-card:nth-child(2) { transform: none; }
   .workout-card:nth-child(2):hover, .workout-card:nth-child(2).active { transform: translateY(-4px); }
+}
+
+/* Rep target picker & still-photo analysis note */
+.rep-target-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+.rep-target-picker .filter-select {
+  width: 100%;
+}
+.upload-analysis-note {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--text-secondary, #d4d4d8);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.conf-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

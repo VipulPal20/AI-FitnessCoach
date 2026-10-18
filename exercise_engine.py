@@ -1,8 +1,14 @@
-"""Experimental v3 temporal pose classifier and conservative rep tracking."""
+"""Experimental v3 temporal pose classifier and conservative rep tracking.
+
+Classification needs a 1.9-second window of motion. Rep counting runs on joint
+angles every frame, either for the exercise the classifier has settled on or
+for a target exercise the user picked.
+"""
 
 from __future__ import annotations
 
 import math
+import threading
 import time
 from pathlib import Path
 from typing import Any, Optional
@@ -15,8 +21,8 @@ from mediapipe.tasks.python import vision
 from mediapipe.tasks.python.core.base_options import BaseOptions
 
 from movement_schema import ACTIONS, ACTION_FAMILY, FAMILY_MAP
-from pose_features_v3 import extract_window_features, landmarks_to_xyz
-from repetition_counter_v3 import RepetitionCounterV3, visible_angles
+from pose_features_v3 import MAX_GAP_SECONDS, extract_window_features, landmarks_to_xyz
+from repetition_counter_v3 import RULES, RepetitionCounterV3, visible_angles
 from train_pose_v3 import predict_hierarchy
 
 
@@ -26,6 +32,9 @@ FEATURE_SIZE = 792
 WINDOW_SECONDS = 1.9
 SAMPLING_FPS = 10
 VISIBILITY_THRESHOLD = 0.35
+# Gaps up to this long only rebuild the classifier window; rep progress is kept.
+TRACKING_RESET_SECONDS = 2.0
+REP_ACTIONS = tuple(RULES)
 
 
 def _model_classes(model, name: str) -> set[str]:
@@ -88,9 +97,14 @@ def _validate_artifact(artifact: Any) -> None:
 
 
 class ExerciseAI:
-    """Image-mode MediaPipe inference backed solely by the v3 model artifact."""
+    """Image-mode MediaPipe inference backed solely by the v3 model artifact.
+
+    Public methods are serialized with a lock: the MediaPipe detector and the
+    temporal buffers are not safe to share between concurrent requests.
+    """
 
     ACTIONS = tuple(ACTIONS)
+    REP_ACTIONS = REP_ACTIONS
 
     def __init__(
         self,
@@ -100,6 +114,7 @@ class ExerciseAI:
         model_path: Optional[Path] = None,
         detector: Any = None,
     ) -> None:
+        self.lock = threading.RLock()
         self.min_detection_confidence = min_detection_confidence
         self.min_tracking_confidence = min_tracking_confidence
         self.classification_threshold = classification_threshold
@@ -122,10 +137,12 @@ class ExerciseAI:
             "experimental": True,
             "rep_counting": "experimental_heuristic_not_validated",
         }
+        self.model_info["training_metadata"] = self.artifact.get("training_metadata", {})
         self.family_map = dict(FAMILY_MAP)
         self.sequence: list[np.ndarray] = []
         self.timestamps: list[float] = []
         self.last_timestamp: Optional[float] = None
+        self.last_valid_timestamp: Optional[float] = None
         self.counter = RepetitionCounterV3(ACTIONS)
         self.counters = self.counter.counters
         self.stages = self.counter.stages
@@ -134,7 +151,12 @@ class ExerciseAI:
         self.last_probabilities = {action: 0.0 for action in ACTIONS}
         self.candidate_action = "unknown"
         self.candidate_frames = 0
+        # Frames of agreement needed to adopt an action from "unknown", and the
+        # larger number needed to switch away from an established action, so a
+        # brief squat/lunge flicker does not wipe out a rep in progress.
         self.action_stability_frames = 3
+        self.action_switch_frames = 6
+        self.target_action: Optional[str] = None
         self._owns_detector = detector is None
         self.detector = detector if detector is not None else self._create_detector()
 
@@ -152,9 +174,10 @@ class ExerciseAI:
         return vision.PoseLandmarker.create_from_options(options)
 
     def close(self) -> None:
-        if self.detector is not None and hasattr(self.detector, "close"):
-            self.detector.close()
-        self.detector = None
+        with self.lock:
+            if self.detector is not None and hasattr(self.detector, "close"):
+                self.detector.close()
+            self.detector = None
 
     def update_settings(
         self,
@@ -162,54 +185,102 @@ class ExerciseAI:
         min_tracking_confidence: Optional[float] = None,
         classification_threshold: Optional[float] = None,
     ) -> None:
-        changed_detector = min_detection_confidence is not None or min_tracking_confidence is not None
-        if min_detection_confidence is not None:
-            self.min_detection_confidence = min_detection_confidence
-        if min_tracking_confidence is not None:
-            self.min_tracking_confidence = min_tracking_confidence
-        if classification_threshold is not None:
-            self.classification_threshold = classification_threshold
-        if changed_detector and self._owns_detector:
-            replacement = self._create_detector()
-            old_detector = self.detector
-            self.detector = replacement
-            if old_detector is not None:
-                old_detector.close()
-            self._clear_tracking()
+        with self.lock:
+            changed_detector = (
+                (min_detection_confidence is not None and min_detection_confidence != self.min_detection_confidence)
+                or (min_tracking_confidence is not None and min_tracking_confidence != self.min_tracking_confidence)
+            )
+            if min_detection_confidence is not None:
+                self.min_detection_confidence = min_detection_confidence
+            if min_tracking_confidence is not None:
+                self.min_tracking_confidence = min_tracking_confidence
+            if classification_threshold is not None:
+                self.classification_threshold = classification_threshold
+            if changed_detector and self._owns_detector:
+                replacement = self._create_detector()
+                old_detector = self.detector
+                self.detector = replacement
+                if old_detector is not None:
+                    old_detector.close()
+                self._clear_tracking()
 
-    def _clear_tracking(self) -> None:
+    def set_target(self, action: Optional[str]) -> Optional[str]:
+        """Count reps for a chosen exercise instead of the classifier's guess."""
+        if action is not None and action not in REP_ACTIONS:
+            raise ValueError(f"target must be one of {', '.join(REP_ACTIONS)} or null")
+        with self.lock:
+            if action != self.target_action:
+                self.target_action = action
+                self.counter.clear_cycle()
+                self.stages = self.counter.stages
+            return self.target_action
+
+    def _clear_window(self) -> None:
+        """Drop the classifier window but keep the current action and rep cycle."""
         self.sequence.clear()
         self.timestamps.clear()
-        self.last_timestamp = None
-        self.current_action = "unknown"
         self.current_confidence = 0.0
         self.last_probabilities = {action: 0.0 for action in ACTIONS}
         self.candidate_action = "unknown"
         self.candidate_frames = 0
+
+    def _clear_tracking(self) -> None:
+        self._clear_window()
+        self.last_timestamp = None
+        self.last_valid_timestamp = None
+        self.current_action = "unknown"
         self.counter.clear_cycle()
         self.stages = self.counter.stages
 
     def reset_counters(self) -> dict[str, int]:
-        self.counter.reset()
+        with self.lock:
+            self.counter.reset()
+            self.counters = self.counter.counters
+            self._clear_tracking()
+            return self.counters.copy()
+
+    def snapshot(self) -> dict[str, Any]:
+        with self.lock:
+            return {
+                "current_action": self.current_action,
+                "confidence": self.current_confidence,
+                "counters": self.counters.copy(),
+                "stages": self.stages.copy(),
+                "probabilities": self.last_probabilities.copy(),
+                "target_action": self.target_action,
+            }
+
+    @property
+    def rep_action(self) -> str:
+        return self.target_action or self.current_action
+
+    def _count(self, angles: dict, timestamp: float) -> Optional[str]:
+        action = self.rep_action
+        if action not in REP_ACTIONS:
+            return None
+        event = self.counter.update(action, angles, timestamp)
         self.counters = self.counter.counters
-        self._clear_tracking()
-        return self.counters.copy()
+        self.stages = self.counter.stages
+        return event
 
     def _payload(self, detected: bool, image: dict[str, int], landmarks: list[dict], angles: dict, rep_event=None, message=None):
         action = self.current_action
+        rep_action = self.rep_action
         result = {
             "detected": detected,
             "image": image,
             "current_action": action,
             "display_name": action.replace("_", " ").title() if action != "unknown" else "Unknown",
             "family": ACTION_FAMILY.get(action, "unknown"),
+            "target_action": self.target_action,
+            "rep_action": rep_action,
             "equipment": "unknown",
             "equipment_detection": "not_trained",
             "experimental": True,
             "model_info": self.model_info,
             "rep_counting": "experimental_heuristic_not_validated",
             "confidence": self.current_confidence,
-            "active_stage": self.stages.get(action),
+            "active_stage": self.stages.get(rep_action),
             "probabilities": self.last_probabilities.copy(),
             "counters": self.counters.copy(),
             "stages": self.stages.copy(),
@@ -223,7 +294,11 @@ class ExerciseAI:
         return result
 
     def process_frame(self, image_bytes: bytes, timestamp_seconds: Optional[float] = None) -> dict[str, Any]:
-        """Classify the last 1.9 seconds of sufficiently sampled, visible poses."""
+        with self.lock:
+            return self._process_frame(image_bytes, timestamp_seconds)
+
+    def _process_frame(self, image_bytes: bytes, timestamp_seconds: Optional[float]) -> dict[str, Any]:
+        """Classify the last 1.9 seconds of visible poses and update rep counts."""
         if timestamp_seconds is not None and (
             isinstance(timestamp_seconds, bool) or not isinstance(timestamp_seconds, (int, float))
             or not math.isfinite(timestamp_seconds) or timestamp_seconds < 0
@@ -232,26 +307,23 @@ class ExerciseAI:
         timestamp = float(timestamp_seconds) if timestamp_seconds is not None else time.perf_counter()
         frame = cv2.imdecode(np.frombuffer(image_bytes, dtype=np.uint8), cv2.IMREAD_COLOR)
         if frame is None:
-            self._clear_tracking()
             return self._payload(False, {}, [], {}, message="Invalid image payload")
         height, width = frame.shape[:2]
         image = {"width": width, "height": height}
-        if self.last_timestamp is not None and (timestamp <= self.last_timestamp or timestamp - self.last_timestamp > 0.35):
-            self._clear_tracking()
+        if self.last_timestamp is not None:
+            step = timestamp - self.last_timestamp
+            if step <= 0 or step > TRACKING_RESET_SECONDS:
+                # A new clip, a rewind, or a long pause: start fresh.
+                self._clear_tracking()
+            elif step > MAX_GAP_SECONDS:
+                # Too sparse for the classifier window, but a rep can survive it.
+                self._clear_window()
         self.last_timestamp = timestamp
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         detection = self.detector.detect(mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame))
         if not detection.pose_landmarks:
-            self._clear_tracking()
-            return self._payload(False, image, [], {}, message="No visible pose")
+            return self._pose_lost(image, timestamp, "No visible pose")
         pose = detection.pose_landmarks[0]
-        try:
-            xyz = landmarks_to_xyz(pose, visibility_threshold=VISIBILITY_THRESHOLD)
-            if xyz is None or np.asarray(xyz).shape != (33, 3) or not np.isfinite(xyz).all():
-                raise ValueError("Insufficient visible pose")
-        except (ValueError, TypeError, AttributeError, IndexError):
-            self._clear_tracking()
-            return self._payload(False, image, [], {}, message="Insufficient visible pose")
         landmarks = [
             {"id": index, "x": round(float(lm.x) * width, 2),
              "y": round(float(lm.y) * height, 2), "z": round(float(lm.z), 3),
@@ -259,18 +331,30 @@ class ExerciseAI:
             for index, lm in enumerate(pose)
         ]
         angles = visible_angles(pose, VISIBILITY_THRESHOLD)
+        try:
+            xyz = landmarks_to_xyz(pose, visibility_threshold=VISIBILITY_THRESHOLD)
+            if xyz is None or np.asarray(xyz).shape != (33, 3) or not np.isfinite(xyz).all():
+                raise ValueError("Insufficient visible pose")
+        except (ValueError, TypeError, AttributeError, IndexError):
+            # The skeleton is still worth drawing even if a full limb side is hidden.
+            payload = self._pose_lost(image, timestamp, "Partial pose: keep one full side of the body in view")
+            payload.update(detected=True, landmarks=landmarks, angles=angles)
+            return payload
         self.sequence.append(np.asarray(xyz, dtype=np.float64))
         self.timestamps.append(timestamp)
+        self.last_valid_timestamp = timestamp
         # Retain the sample immediately before the window boundary so that
         # interpolation covers the entire 1.9-second interval.
         while len(self.timestamps) > 1 and timestamp - self.timestamps[1] >= WINDOW_SECONDS:
             self.timestamps.pop(0)
             self.sequence.pop(0)
         if len(self.sequence) < 20 or self.timestamps[-1] - self.timestamps[0] < WINDOW_SECONDS - 1e-9:
-            self.current_action = "unknown"
-            self.counter.clear_cycle()
-            self.stages = self.counter.stages
-            return self._payload(True, image, landmarks, angles, message="Buffering pose window")
+            rep_event = self._count(angles, timestamp)
+            return self._payload(True, image, landmarks, angles, rep_event, message="Buffering pose window")
+        if np.any(np.diff(np.asarray(self.timestamps, dtype=np.float64)) > MAX_GAP_SECONDS + 1e-9):
+            self._clear_window()
+            rep_event = self._count(angles, timestamp)
+            return self._payload(True, image, landmarks, angles, rep_event, message="Pose gap; rebuilding window")
         try:
             features = extract_window_features(np.asarray(self.sequence), np.asarray(self.timestamps))
             features = np.asarray(features)
@@ -290,21 +374,31 @@ class ExerciseAI:
         action, confidence = ranked[0]
         margin = confidence - ranked[1][1]
         self.current_confidence = round(confidence, 3)
-        if (action == "unknown" or confidence < max(self.classification_threshold, self.artifact["threshold"], 0.7)
-                or margin < self.artifact["margin"]):
-            self._clear_tracking()
-            return self._payload(True, image, landmarks, angles, message="Low-confidence movement")
-        if action != self.candidate_action:
-            self.candidate_action = action
-            self.candidate_frames = 1
-            self.current_action = "unknown"
-            self.counter.clear_cycle()
-            self.stages = self.counter.stages
+        message = None
+        confident = (action != "unknown"
+                     and confidence >= max(self.classification_threshold, self.artifact["threshold"])
+                     and margin >= self.artifact["margin"])
+        if not confident:
+            # Hold the established action instead of discarding rep progress.
+            message = "Low-confidence movement"
         else:
-            self.candidate_frames += 1
-        if self.candidate_frames < self.action_stability_frames:
-            return self._payload(True, image, landmarks, angles, message="Stabilizing movement")
-        self.current_action = action
-        rep_event = self.counter.update(action, angles, timestamp)
-        self.stages = self.counter.stages
-        return self._payload(True, image, landmarks, angles, rep_event)
+            if action == self.candidate_action:
+                self.candidate_frames += 1
+            else:
+                self.candidate_action = action
+                self.candidate_frames = 1
+            needed = self.action_stability_frames if self.current_action == "unknown" else self.action_switch_frames
+            if action != self.current_action:
+                if self.candidate_frames >= needed:
+                    self.current_action = action
+                else:
+                    message = "Stabilizing movement"
+        rep_event = self._count(angles, timestamp)
+        return self._payload(True, image, landmarks, angles, rep_event, message=message)
+
+    def _pose_lost(self, image: dict[str, int], timestamp: float, message: str) -> dict[str, Any]:
+        if self.last_valid_timestamp is None or timestamp - self.last_valid_timestamp > TRACKING_RESET_SECONDS:
+            self._clear_tracking()
+        elif timestamp - self.last_valid_timestamp > MAX_GAP_SECONDS:
+            self._clear_window()
+        return self._payload(False, image, [], {}, message=message)

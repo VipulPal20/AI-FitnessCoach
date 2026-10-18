@@ -7,7 +7,10 @@ home with at least 0.4 seconds between the first home and completed return.
 from __future__ import annotations
 
 import math
+from collections import Counter
 from typing import Optional
+
+from movement_schema import ACTION_FAMILY
 
 
 RULES = {
@@ -18,7 +21,9 @@ RULES = {
     "pull_up": ("elbow", 150, 65),
     "row": ("elbow", 150, 100),
     "squat": ("squat", 160, 100),
-    "deadlift": ("hip", 160, 100),
+    # A front-on camera foreshortens hip flexion (a full hinge reads ~140 deg),
+    # so the effort threshold is looser than for side-on footage.
+    "deadlift": ("hip", 160, 145),
     "lunge": ("knee", 160, 100),
     "jumping_jack": ("shoulder", 35, 100),
 }
@@ -70,11 +75,33 @@ class RepetitionCounterV3:
         self.stages = {action: None for action in self.counters}
         self.active_action = "unknown"
         self.started_at: Optional[float] = None
+        self.votes: Counter[str] = Counter()
 
     def clear_cycle(self) -> None:
         self.stages = dict.fromkeys(self.stages)
         self.active_action = "unknown"
         self.started_at = None
+        self.votes = Counter()
+
+    def _switch(self, action: str) -> None:
+        """Change action; keep a rep in progress if both share a movement family.
+
+        The classifier often swaps between close relatives mid-rep (a squat's
+        bottom position looks like a lunge), which would otherwise discard
+        every rep. The completed rep is credited by majority vote.
+        """
+        previous = self.active_action
+        stage = self.stages.get(previous)
+        related = (previous in self.stages and action in self.stages
+                   and ACTION_FAMILY.get(previous) == ACTION_FAMILY.get(action))
+        if related and stage is not None:
+            started, votes = self.started_at, self.votes
+            self.clear_cycle()
+            self.stages[action] = stage
+            self.started_at, self.votes = started, votes
+        else:
+            self.clear_cycle()
+        self.active_action = action
 
     def reset(self) -> dict[str, int]:
         self.counters = dict.fromkeys(self.counters, 0)
@@ -113,13 +140,14 @@ class RepetitionCounterV3:
 
     def update(self, action: str, angles: dict[str, float], timestamp: float) -> Optional[str]:
         if action != self.active_action:
-            self.clear_cycle()
-            self.active_action = action
+            self._switch(action)
         if action not in RULES:
             return None
+        self.votes[action] += 1
         position = self._position(action, angles)
         if position is None:
-            self.clear_cycle()
+            # A joint briefly dropped out of view: hold the stage rather than
+            # discard a rep that is already under way.
             return None
         stage = self.stages[action]
         if stage is None:
@@ -132,7 +160,10 @@ class RepetitionCounterV3:
             self.stages[action] = "home"
             start = self.started_at
             self.started_at = timestamp
+            votes, self.votes = self.votes, Counter()
             if start is not None and timestamp - start >= 0.4:
-                self.counters[action] += 1
-                return action
+                # Ties go to the action that is active now.
+                credited = max(votes, key=lambda label: (votes[label], label == action)) if votes else action
+                self.counters[credited] += 1
+                return credited
         return None

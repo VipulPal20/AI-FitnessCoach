@@ -12,7 +12,7 @@ Missing pose frames terminate a sequence; frames are never interpolated or
 turned into synthetic positives.
 
 The generated ``manifest_pose_v2.csv`` has the contract consumed by
-``train_pose_v2.py``::
+``merge_pose_manifests.py`` and ``train_pose_v3.py``::
 
     clip_path,label,group
 
@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Iterable, Sequence
 
 import numpy as np
+from pose_features_v3 import MAX_GAP_SECONDS
 
 
 LANDMARK_COUNT = 33
@@ -278,14 +279,16 @@ def extract_video(
     frame_index = 0
     current_frames: list[np.ndarray] = []
     current_times: list[float] = []
+    last_valid_timestamp: float | None = None
     clip_paths: list[Path] = []
     clip_number = 0
 
     def flush_current() -> None:
-        nonlocal clip_number, current_frames, current_times
+        nonlocal clip_number, current_frames, current_times, last_valid_timestamp
         if len(current_frames) < config.min_clip_frames:
             current_frames = []
             current_times = []
+            last_valid_timestamp = None
             return
         safe_stem = f"row_{row.row_number:06d}"
         while current_frames:
@@ -299,6 +302,8 @@ def extract_video(
                 clip_number += 1
             current_frames = current_frames[config.max_clip_frames :]
             current_times = current_times[config.max_clip_frames :]
+            if not current_frames:
+                last_valid_timestamp = None
 
     try:
         while True:
@@ -329,10 +334,15 @@ def extract_video(
             result = detector.detect(image)
             xyz = pose_result_to_xyz(result, config.visibility_threshold)
             if xyz is None:
-                flush_current()
+                # A short detector miss is represented by a timestamp gap and
+                # remains usable if the v3 window gap contract is preserved.
+                # Long gaps terminate the segment; no pose is synthesized.
                 continue
+            if last_valid_timestamp is not None and timestamp - last_valid_timestamp > MAX_GAP_SECONDS:
+                flush_current()
             current_frames.append(xyz)
             current_times.append(timestamp)
+            last_valid_timestamp = timestamp
             if len(current_frames) >= config.max_clip_frames:
                 flush_current()
     finally:
@@ -384,11 +394,17 @@ def run_extraction(
     model_path: Path = DEFAULT_MODEL_PATH,
     config: ExtractConfig = ExtractConfig(),
     delete_source_media: bool = False,
+    labels: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     """Run extraction, write outputs, and return the receipt payload."""
 
     validate_config(config)
     rows = read_video_manifest(manifest_path)
+    if labels:
+        allowed = set(labels)
+        rows = [row for row in rows if row.label in allowed]
+        if not rows:
+            raise ValueError(f"No manifest rows matched labels: {sorted(allowed)}")
     output_dir = Path(output_dir).expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     clip_records: list[tuple[Path, str, str]] = []
@@ -480,6 +496,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="After a fully successful run, unlink only regular files listed in the manifest",
     )
+    parser.add_argument(
+        "--label",
+        action="append",
+        dest="labels",
+        help="Restrict extraction to one or more exact labels; may be repeated",
+    )
     return parser
 
 
@@ -503,6 +525,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             model_path=args.model,
             config=config,
             delete_source_media=args.delete_source_media,
+            labels=args.labels,
         )
     except (OSError, ValueError, RuntimeError) as exc:
         parser.error(str(exc))

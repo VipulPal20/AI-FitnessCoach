@@ -104,12 +104,19 @@ def clip_windows(path: Path) -> np.ndarray:
     return np.vstack(windows) if windows else np.empty((0, FEATURE_SIZE), dtype=np.float64)
 
 
-def split_groups(groups: Sequence[str], labels: Sequence[str], seed: int = 42) -> dict[str, list[str]]:
-    """Find a deterministic, class-covered 3-way recording-group split.
+def split_groups(
+    groups: Sequence[str],
+    labels: Sequence[str],
+    seed: int = 42,
+    require_class_in_each_split: bool = True,
+) -> dict[str, list[str]]:
+    """Find a deterministic recording-group split.
 
     Multi-label groups are indivisible. A bounded randomized greedy search
     selects coverage before matching the approximate 70/15/15 group sizes.
-    Failure is explicit rather than silently evaluating a missing class.
+    Strict mode requires every class in all three partitions; experimental
+    mode requires every class in training and records missing evaluation
+    classes explicitly.
     """
 
     by_group: dict[str, set[str]] = defaultdict(set)
@@ -118,12 +125,32 @@ def split_groups(groups: Sequence[str], labels: Sequence[str], seed: int = 42) -
     missing = [label for label in ACTIONS if not any(label in ls for ls in by_group.values())]
     if missing:
         raise ValueError(f"Missing required classes: {missing}")
+    names = sorted(by_group)
     inadequate = {label: sum(label in ls for ls in by_group.values()) for label in ACTIONS}
     inadequate = {label: count for label, count in inadequate.items() if count < 3}
-    if inadequate:
+    if inadequate and require_class_in_each_split:
         raise ValueError(f"Each class needs >=3 independent recording group IDs: {inadequate}")
+    if not require_class_in_each_split:
+        # Experimental mode keeps every observed class in training, then
+        # distributes all remaining recording groups approximately 70/15/15.
+        # It deliberately does not manufacture validation/test support for
+        # under-covered labels.
+        assigned: dict[str, int] = {}
+        for label in sorted(ACTIONS, key=lambda name: (sum(name in ls for ls in by_group.values()), name)):
+            candidates = [group for group in sorted(by_group) if group not in assigned and label in by_group[group]]
+            if candidates:
+                assigned[candidates[0]] = 0
+        desired = np.array([0.7, 0.15, 0.15]) * len(names)
+        for group in sorted((group for group in names if group not in assigned)):
+            assigned[group] = min(
+                range(3),
+                key=lambda slot: (sum(value == slot for value in assigned.values()) / max(desired[slot], 1.0), slot),
+            )
+        return {
+            name: sorted(group for group, slot in assigned.items() if slot == index)
+            for index, name in enumerate(SPLITS)
+        }
     rng = np.random.default_rng(seed)
-    names = sorted(by_group)
     desired = np.array([0.7, 0.15, 0.15]) * len(names)
     best: tuple[float, dict[str, list[str]]] | None = None
     for _ in range(1024):
@@ -158,7 +185,9 @@ def split_groups(groups: Sequence[str], labels: Sequence[str], seed: int = 42) -
                         break
                 if label not in covered[slot]:
                     break
-        if not all(set(ACTIONS) <= subset for subset in covered):
+        if require_class_in_each_split and not all(set(ACTIONS) <= subset for subset in covered):
+            continue
+        if not set(ACTIONS) <= covered[0]:
             continue
         for group in sorted((g for g in names if g not in assigned), key=lambda g: tie[g]):
             assigned[group] = min(range(3), key=lambda i: (sum(v == i for v in assigned.values()) / desired[i], i))
@@ -246,7 +275,13 @@ def _report(y: Sequence[str], predictions: Sequence[str]) -> dict[str, Any]:
     }
 
 
-def train_pipeline(manifest: Path, output: Path, metrics_path: Path | None = None, seed: int = 42) -> dict[str, Any]:
+def train_pipeline(
+    manifest: Path,
+    output: Path,
+    metrics_path: Path | None = None,
+    seed: int = 42,
+    allow_undercovered: bool = False,
+) -> dict[str, Any]:
     clips = read_manifest(manifest)
     x_parts, window_labels, window_groups = [], [], []
     skipped = []
@@ -260,7 +295,12 @@ def train_pipeline(manifest: Path, output: Path, metrics_path: Path | None = Non
         window_groups.extend([clip.group] * len(windows))
     # Validate only groups with actual usable windows; a short clip cannot
     # establish training or evaluation support.
-    partition = split_groups(window_groups, window_labels, seed)
+    partition = split_groups(
+        window_groups,
+        window_labels,
+        seed,
+        require_class_in_each_split=not allow_undercovered,
+    )
     x = np.vstack(x_parts)
     y = np.asarray(window_labels)
     ids = np.asarray(window_groups)
@@ -278,6 +318,20 @@ def train_pipeline(manifest: Path, output: Path, metrics_path: Path | None = Non
                 best = (score, depth, leaf, artifact)
     assert best is not None
     artifact = best[3]  # trained on train only; test is untouched until selection
+    group_counts = {
+        label: len({group for group, item in zip(window_groups, window_labels) if item == label})
+        for label in ACTIONS
+    }
+    artifact["training_metadata"] = {
+        "allow_undercovered": allow_undercovered,
+        "group_counts_by_label": group_counts,
+        "coverage_warning": (
+            "Some labels have fewer than three independent recording groups; "
+            "validation/test coverage is incomplete."
+            if allow_undercovered and any(count < 3 for count in group_counts.values())
+            else None
+        ),
+    }
     sections = {}
     for name in SPLITS:
         subset = indices[name]
@@ -297,6 +351,7 @@ def train_pipeline(manifest: Path, output: Path, metrics_path: Path | None = Non
         "schema_version": 3, "seed": seed, "source": str(Path(manifest).resolve()),
         "clips": len(clips), "usable_clips": len(clips) - len(skipped), "skipped_short_clips": skipped,
         "windows": len(x), "source_group_ids": sorted(set(window_groups)),
+        "allow_undercovered": allow_undercovered,
         "labels": list(ACTIONS), "selection_metric": "validation_raw_macro_f1",
         "search": search, "selected": {"max_depth": best[1], "min_samples_leaf": best[2]},
         "splits": sections, "equipment_detection": "not_trained", "production_ready": False,
@@ -318,9 +373,14 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser.add_argument("--output", type=Path, required=True, help="Local joblib artifact path")
     parser.add_argument("--metrics", type=Path, help="JSON report path (defaults beside artifact)")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--allow-undercovered",
+        action="store_true",
+        help="Allow classes with fewer than three independent groups; artifact remains experimental and metrics may lack validation/test support.",
+    )
     args = parser.parse_args(argv)
     try:
-        metrics = train_pipeline(args.manifest, args.output, args.metrics, args.seed)
+        metrics = train_pipeline(args.manifest, args.output, args.metrics, args.seed, args.allow_undercovered)
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     print(json.dumps({"model": str(args.output), "windows": metrics["windows"],

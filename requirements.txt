@@ -1,9 +1,13 @@
+# Runtime dependencies for the web app (app.py + exercise_engine.py).
+# Tested with Python 3.12 on Windows 11.
 fastapi>=0.115,<1.0
 uvicorn[standard]>=0.30,<1.0
 python-multipart>=0.0.9,<1.0
-mediapipe>=0.10.0
-tensorflow>=2.15.0
-opencv-python>=4.10,<5.0
-numpy>=1.26,<3.0
-scikit-learn>=1.5,<2.0
 python-dotenv>=1.0.0
+mediapipe>=0.10.14
+opencv-python>=4.10
+numpy>=1.26
+joblib>=1.3
+# models/exercise_starter_v3.joblib was pickled with scikit-learn 1.9.0;
+# other minor versions may refuse to unpickle the decision trees.
+scikit-learn>=1.9,<1.10

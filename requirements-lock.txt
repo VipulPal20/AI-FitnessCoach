@@ -1,0 +1,12 @@
+# Exact versions the app was tested with (Python 3.12, Windows 11).
+# Use this file for a reproducible install on a demo machine:
+#   python -m pip install -r requirements-lock.txt
+fastapi==0.141.1
+uvicorn[standard]==0.52.1
+python-multipart==0.0.32
+python-dotenv==1.2.2
+mediapipe==1.0.1
+opencv-python==5.0.0.93
+numpy==2.5.1
+joblib==1.5.3
+scikit-learn==1.9.0

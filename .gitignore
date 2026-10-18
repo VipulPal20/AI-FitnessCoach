@@ -4,6 +4,5 @@ __pycache__/
 .env
 exercises-dataset/
 exercise_registry.json
-runs/pose/
 *.cache
-yolo26n.pt
+web/node_modules/

@@ -1,0 +1,1725 @@
+{
+  "schema_version": 3,
+  "seed": 42,
+  "source": "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-merged3\\manifest_pose_v3.csv",
+  "clips": 131,
+  "usable_clips": 120,
+  "skipped_short_clips": [
+    "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-fixed\\clips\\row_000052_clip_0000.npz",
+    "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-fixed\\clips\\row_000059_clip_0000.npz",
+    "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-fixed\\clips\\row_000075_clip_0000.npz",
+    "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-fixed\\clips\\row_000078_clip_0000.npz",
+    "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-fixed\\clips\\row_000125_clip_0000.npz",
+    "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-fixed\\clips\\row_000129_clip_0000.npz",
+    "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-fixed\\clips\\row_000132_clip_0000.npz",
+    "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-fixed\\clips\\row_000136_clip_0000.npz",
+    "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-bench-lowconf\\clips\\row_000010_clip_0000.npz",
+    "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-bench-lowconf\\clips\\row_000189_clip_0001.npz",
+    "C:\\Users\\vipul\\AppData\\Local\\Temp\\omnirush\\starter-v3\\poses-bench-lowconf\\clips\\row_000196_clip_0000.npz"
+  ],
+  "windows": 360,
+  "source_group_ids": [
+    "hasyim_recording_00e6ce2b9ae9863ff1da",
+    "hasyim_recording_0918f9b8a126b7b99658",
+    "hasyim_recording_0b126a24ebcf9e71d3d6",
+    "hasyim_recording_21be636d0692731ae7e4",
+    "hasyim_recording_29463a69d7a851a0ea2a",
+    "hasyim_recording_2a855a45952352ee798c",
+    "hasyim_recording_2cd1679fdadec4a32875",
+    "hasyim_recording_2dd4eb657d50b0b2f4ba",
+    "hasyim_recording_2f702c29b223c655899e",
+    "hasyim_recording_319025d127c4dc783310",
+    "hasyim_recording_31f0d0603a104aeb85d8",
+    "hasyim_recording_354c8bf0a683e01c5478",
+    "hasyim_recording_3678ac4a229a5b27ee71",
+    "hasyim_recording_36c8988e3f9c14e729fc",
+    "hasyim_recording_39c90481623f282d6654",
+    "hasyim_recording_40ee21b2db55d8b4a4c3",
+    "hasyim_recording_4376eb50175a144b9de8",
+    "hasyim_recording_442fe2870f7ab6dfa4e6",
+    "hasyim_recording_4d192c2e0d6c1c60b624",
+    "hasyim_recording_50da3b6ca230c98e5852",
+    "hasyim_recording_54e98984e97030cc4d09",
+    "hasyim_recording_5c76aae0db2e82546abd",
+    "hasyim_recording_5f0e946d32408345ce91",
+    "hasyim_recording_613ca960e118f5cfe901",
+    "hasyim_recording_61a066bb42eebd06c34e",
+    "hasyim_recording_6543ee7d77ed846a5a2b",
+    "hasyim_recording_662ea3e16246fcbba11e",
+    "hasyim_recording_6793193265308c0ff27a",
+    "hasyim_recording_679dcddd5ee1c0f5a7c5",
+    "hasyim_recording_6a366040088236dfa5f7",
+    "hasyim_recording_6c4fc36419b642439810",
+    "hasyim_recording_703d791f449c8e83aa66",
+    "hasyim_recording_754dd554be7d7a01bf5c",
+    "hasyim_recording_7d57ac60772a1279d886",
+    "hasyim_recording_7da0fda3e165d5266be7",
+    "hasyim_recording_8422812b4a4db42e4b89",
+    "hasyim_recording_87c29f1d288540c4318a",
+    "hasyim_recording_8ca50f11361e5cfa8795",
+    "hasyim_recording_929c1fcbc9064e6d8e1f",
+    "hasyim_recording_97701301f4f1dd7ed2ad",
+    "hasyim_recording_9d7106e076ccb7979049",
+    "hasyim_recording_9e607ac0910289817183",
+    "hasyim_recording_a446b2704a6599c9263d",
+    "hasyim_recording_b3e2e118963f8cef1a5f",
+    "hasyim_recording_b55f11dbdfa0b1def9ed",
+    "hasyim_recording_b9783cba717424688486",
+    "hasyim_recording_bb3d2a0291c1d875ba32",
+    "hasyim_recording_c06035ee317dbcf5f9b5",
+    "hasyim_recording_c11a150b60522d6a614c",
+    "hasyim_recording_c7eb250d0ec76ee28240",
+    "hasyim_recording_c86b1bd95930a4b440a3",
+    "hasyim_recording_c87aa8ab1a72b82761d3",
+    "hasyim_recording_ca659e9dc5770274a459",
+    "hasyim_recording_cdfb32fa3bbb058eb49c",
+    "hasyim_recording_d06dd5ec957ce9292a9b",
+    "hasyim_recording_d0c698e0e96b19aa79e3",
+    "hasyim_recording_d40b681face29d092476",
+    "hasyim_recording_d90a89c0411b4b15849b",
+    "hasyim_recording_dd0a75f658e7199e7d85",
+    "hasyim_recording_de98d208e83d5b952849",
+    "hasyim_recording_e62e81f6e22ac82c43d2",
+    "hasyim_recording_ebccb75da4b5fbc7ad6d",
+    "hasyim_recording_f16f25f4bb24ef6e43e8",
+    "hasyim_recording_f423e414f55625500d2b",
+    "ucf_JumpingJack_g01",
+    "ucf_JumpingJack_g02",
+    "ucf_JumpingJack_g12",
+    "ucf_JumpingJack_g20",
+    "ucf_JumpingJack_g21",
+    "ucf_JumpingJack_g22",
+    "ucf_JumpingJack_g24",
+    "ucf_Lunges_g06",
+    "ucf_Lunges_g07",
+    "ucf_Lunges_g10",
+    "ucf_Lunges_g12",
+    "ucf_Lunges_g13",
+    "ucf_Lunges_g14",
+    "ucf_Lunges_g16",
+    "ucf_Lunges_g17",
+    "ucf_Lunges_g22",
+    "ucf_Lunges_g23",
+    "ucf_Lunges_g24",
+    "ucf_WalkingWithDog_g01",
+    "ucf_WalkingWithDog_g15",
+    "ucf_WalkingWithDog_g17",
+    "ucf_WalkingWithDog_g18",
+    "ucf_WalkingWithDog_g23"
+  ],
+  "allow_undercovered": false,
+  "labels": [
+    "bench_press",
+    "shoulder_press",
+    "push_up",
+    "squat",
+    "deadlift",
+    "bicep_curl",
+    "pull_up",
+    "row",
+    "lunge",
+    "jumping_jack",
+    "unknown"
+  ],
+  "selection_metric": "validation_raw_macro_f1",
+  "search": [
+    {
+      "max_depth": 4,
+      "min_samples_leaf": 2,
+      "validation_macro_f1": 0.24864474864474867
+    },
+    {
+      "max_depth": 4,
+      "min_samples_leaf": 4,
+      "validation_macro_f1": 0.24838611680716943
+    },
+    {
+      "max_depth": 4,
+      "min_samples_leaf": 8,
+      "validation_macro_f1": 0.25762551624620583
+    },
+    {
+      "max_depth": 6,
+      "min_samples_leaf": 2,
+      "validation_macro_f1": 0.3234142668925278
+    },
+    {
+      "max_depth": 6,
+      "min_samples_leaf": 4,
+      "validation_macro_f1": 0.31746145817292065
+    },
+    {
+      "max_depth": 6,
+      "min_samples_leaf": 8,
+      "validation_macro_f1": 0.3113746157224418
+    },
+    {
+      "max_depth": 8,
+      "min_samples_leaf": 2,
+      "validation_macro_f1": 0.35533083517273245
+    },
+    {
+      "max_depth": 8,
+      "min_samples_leaf": 4,
+      "validation_macro_f1": 0.3795732594151567
+    },
+    {
+      "max_depth": 8,
+      "min_samples_leaf": 8,
+      "validation_macro_f1": 0.3821444256226865
+    },
+    {
+      "max_depth": 10,
+      "min_samples_leaf": 2,
+      "validation_macro_f1": 0.32461372619475387
+    },
+    {
+      "max_depth": 10,
+      "min_samples_leaf": 4,
+      "validation_macro_f1": 0.3795732594151567
+    },
+    {
+      "max_depth": 10,
+      "min_samples_leaf": 8,
+      "validation_macro_f1": 0.3821444256226865
+    }
+  ],
+  "selected": {
+    "max_depth": 8,
+    "min_samples_leaf": 8
+  },
+  "splits": {
+    "train": {
+      "windows": 231,
+      "groups": [
+        "hasyim_recording_00e6ce2b9ae9863ff1da",
+        "hasyim_recording_0918f9b8a126b7b99658",
+        "hasyim_recording_21be636d0692731ae7e4",
+        "hasyim_recording_29463a69d7a851a0ea2a",
+        "hasyim_recording_2a855a45952352ee798c",
+        "hasyim_recording_2cd1679fdadec4a32875",
+        "hasyim_recording_2dd4eb657d50b0b2f4ba",
+        "hasyim_recording_319025d127c4dc783310",
+        "hasyim_recording_354c8bf0a683e01c5478",
+        "hasyim_recording_36c8988e3f9c14e729fc",
+        "hasyim_recording_39c90481623f282d6654",
+        "hasyim_recording_40ee21b2db55d8b4a4c3",
+        "hasyim_recording_4376eb50175a144b9de8",
+        "hasyim_recording_442fe2870f7ab6dfa4e6",
+        "hasyim_recording_4d192c2e0d6c1c60b624",
+        "hasyim_recording_50da3b6ca230c98e5852",
+        "hasyim_recording_54e98984e97030cc4d09",
+        "hasyim_recording_5c76aae0db2e82546abd",
+        "hasyim_recording_5f0e946d32408345ce91",
+        "hasyim_recording_61a066bb42eebd06c34e",
+        "hasyim_recording_662ea3e16246fcbba11e",
+        "hasyim_recording_6793193265308c0ff27a",
+        "hasyim_recording_679dcddd5ee1c0f5a7c5",
+        "hasyim_recording_6a366040088236dfa5f7",
+        "hasyim_recording_6c4fc36419b642439810",
+        "hasyim_recording_703d791f449c8e83aa66",
+        "hasyim_recording_754dd554be7d7a01bf5c",
+        "hasyim_recording_7da0fda3e165d5266be7",
+        "hasyim_recording_87c29f1d288540c4318a",
+        "hasyim_recording_97701301f4f1dd7ed2ad",
+        "hasyim_recording_9d7106e076ccb7979049",
+        "hasyim_recording_9e607ac0910289817183",
+        "hasyim_recording_a446b2704a6599c9263d",
+        "hasyim_recording_b55f11dbdfa0b1def9ed",
+        "hasyim_recording_c11a150b60522d6a614c",
+        "hasyim_recording_c87aa8ab1a72b82761d3",
+        "hasyim_recording_ca659e9dc5770274a459",
+        "hasyim_recording_d06dd5ec957ce9292a9b",
+        "hasyim_recording_d0c698e0e96b19aa79e3",
+        "hasyim_recording_d40b681face29d092476",
+        "hasyim_recording_d90a89c0411b4b15849b",
+        "hasyim_recording_de98d208e83d5b952849",
+        "hasyim_recording_e62e81f6e22ac82c43d2",
+        "hasyim_recording_f16f25f4bb24ef6e43e8",
+        "hasyim_recording_f423e414f55625500d2b",
+        "ucf_JumpingJack_g01",
+        "ucf_JumpingJack_g02",
+        "ucf_JumpingJack_g12",
+        "ucf_JumpingJack_g21",
+        "ucf_JumpingJack_g22",
+        "ucf_Lunges_g06",
+        "ucf_Lunges_g07",
+        "ucf_Lunges_g12",
+        "ucf_Lunges_g14",
+        "ucf_Lunges_g16",
+        "ucf_Lunges_g17",
+        "ucf_Lunges_g22",
+        "ucf_Lunges_g23",
+        "ucf_Lunges_g24",
+        "ucf_WalkingWithDog_g17",
+        "ucf_WalkingWithDog_g23"
+      ],
+      "group_count": 61,
+      "class_support": {
+        "bench_press": 16,
+        "shoulder_press": 8,
+        "push_up": 19,
+        "squat": 18,
+        "deadlift": 35,
+        "bicep_curl": 15,
+        "pull_up": 28,
+        "row": 33,
+        "lunge": 43,
+        "jumping_jack": 8,
+        "unknown": 8
+      },
+      "missing_classes": [],
+      "unknown_support": 8,
+      "raw": {
+        "accuracy": 0.8744588744588745,
+        "macro_f1": 0.7948201034135619,
+        "per_class": {
+          "bench_press": {
+            "precision": 0.9411764705882353,
+            "recall": 1.0,
+            "f1-score": 0.9696969696969697,
+            "support": 16.0
+          },
+          "shoulder_press": {
+            "precision": 0.8888888888888888,
+            "recall": 1.0,
+            "f1-score": 0.9411764705882353,
+            "support": 8.0
+          },
+          "push_up": {
+            "precision": 0.8095238095238095,
+            "recall": 0.8947368421052632,
+            "f1-score": 0.85,
+            "support": 19.0
+          },
+          "squat": {
+            "precision": 0.72,
+            "recall": 1.0,
+            "f1-score": 0.8372093023255814,
+            "support": 18.0
+          },
+          "deadlift": {
+            "precision": 1.0,
+            "recall": 0.8571428571428571,
+            "f1-score": 0.9230769230769231,
+            "support": 35.0
+          },
+          "bicep_curl": {
+            "precision": 1.0,
+            "recall": 0.8666666666666667,
+            "f1-score": 0.9285714285714286,
+            "support": 15.0
+          },
+          "pull_up": {
+            "precision": 0.9642857142857143,
+            "recall": 0.9642857142857143,
+            "f1-score": 0.9642857142857143,
+            "support": 28.0
+          },
+          "row": {
+            "precision": 0.8787878787878788,
+            "recall": 0.8787878787878788,
+            "f1-score": 0.8787878787878788,
+            "support": 33.0
+          },
+          "lunge": {
+            "precision": 0.926829268292683,
+            "recall": 0.8837209302325582,
+            "f1-score": 0.9047619047619048,
+            "support": 43.0
+          },
+          "jumping_jack": {
+            "precision": 0.42857142857142855,
+            "recall": 0.75,
+            "f1-score": 0.5454545454545454,
+            "support": 8.0
+          },
+          "unknown": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 8.0
+          }
+        },
+        "confusion_labels": [
+          "bench_press",
+          "shoulder_press",
+          "push_up",
+          "squat",
+          "deadlift",
+          "bicep_curl",
+          "pull_up",
+          "row",
+          "lunge",
+          "jumping_jack",
+          "unknown"
+        ],
+        "confusion_matrix": [
+          [
+            16,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            17,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            18,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            2,
+            0,
+            30,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            0,
+            13,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            27,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            29,
+            0,
+            3,
+            0
+          ],
+          [
+            1,
+            0,
+            1,
+            2,
+            0,
+            0,
+            1,
+            0,
+            38,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            6,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            5,
+            0
+          ]
+        ]
+      },
+      "abstained": {
+        "accuracy": 0.8441558441558441,
+        "macro_f1": 0.7937758976853815,
+        "per_class": {
+          "bench_press": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 16.0
+          },
+          "shoulder_press": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 8.0
+          },
+          "push_up": {
+            "precision": 1.0,
+            "recall": 0.7894736842105263,
+            "f1-score": 0.8823529411764706,
+            "support": 19.0
+          },
+          "squat": {
+            "precision": 1.0,
+            "recall": 0.9444444444444444,
+            "f1-score": 0.9714285714285714,
+            "support": 18.0
+          },
+          "deadlift": {
+            "precision": 1.0,
+            "recall": 0.8571428571428571,
+            "f1-score": 0.9230769230769231,
+            "support": 35.0
+          },
+          "bicep_curl": {
+            "precision": 1.0,
+            "recall": 0.8666666666666667,
+            "f1-score": 0.9285714285714286,
+            "support": 15.0
+          },
+          "pull_up": {
+            "precision": 0.9629629629629629,
+            "recall": 0.9285714285714286,
+            "f1-score": 0.9454545454545454,
+            "support": 28.0
+          },
+          "row": {
+            "precision": 1.0,
+            "recall": 0.7878787878787878,
+            "f1-score": 0.8813559322033898,
+            "support": 33.0
+          },
+          "lunge": {
+            "precision": 0.9736842105263158,
+            "recall": 0.8604651162790697,
+            "f1-score": 0.9135802469135802,
+            "support": 43.0
+          },
+          "jumping_jack": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 8.0
+          },
+          "unknown": {
+            "precision": 0.17073170731707318,
+            "recall": 0.875,
+            "f1-score": 0.2857142857142857,
+            "support": 8.0
+          }
+        },
+        "confusion_labels": [
+          "bench_press",
+          "shoulder_press",
+          "push_up",
+          "squat",
+          "deadlift",
+          "bicep_curl",
+          "pull_up",
+          "row",
+          "lunge",
+          "jumping_jack",
+          "unknown"
+        ],
+        "confusion_matrix": [
+          [
+            16,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            15,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4
+          ],
+          [
+            0,
+            0,
+            0,
+            17,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0,
+            5
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            13,
+            0,
+            0,
+            0,
+            0,
+            2
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            26,
+            0,
+            0,
+            0,
+            2
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            26,
+            0,
+            0,
+            7
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            37,
+            0,
+            5
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            8
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            7
+          ]
+        ]
+      }
+    },
+    "validation": {
+      "windows": 55,
+      "groups": [
+        "hasyim_recording_0b126a24ebcf9e71d3d6",
+        "hasyim_recording_2f702c29b223c655899e",
+        "hasyim_recording_31f0d0603a104aeb85d8",
+        "hasyim_recording_3678ac4a229a5b27ee71",
+        "hasyim_recording_6543ee7d77ed846a5a2b",
+        "hasyim_recording_8422812b4a4db42e4b89",
+        "hasyim_recording_929c1fcbc9064e6d8e1f",
+        "hasyim_recording_b9783cba717424688486",
+        "hasyim_recording_c7eb250d0ec76ee28240",
+        "hasyim_recording_dd0a75f658e7199e7d85",
+        "ucf_JumpingJack_g24",
+        "ucf_Lunges_g10",
+        "ucf_WalkingWithDog_g18"
+      ],
+      "group_count": 13,
+      "class_support": {
+        "bench_press": 1,
+        "shoulder_press": 9,
+        "push_up": 4,
+        "squat": 16,
+        "deadlift": 2,
+        "bicep_curl": 8,
+        "pull_up": 2,
+        "row": 4,
+        "lunge": 5,
+        "jumping_jack": 2,
+        "unknown": 2
+      },
+      "missing_classes": [],
+      "unknown_support": 2,
+      "raw": {
+        "accuracy": 0.41818181818181815,
+        "macro_f1": 0.3821444256226865,
+        "per_class": {
+          "bench_press": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 1.0
+          },
+          "shoulder_press": {
+            "precision": 0.6,
+            "recall": 0.3333333333333333,
+            "f1-score": 0.42857142857142855,
+            "support": 9.0
+          },
+          "push_up": {
+            "precision": 0.8,
+            "recall": 1.0,
+            "f1-score": 0.8888888888888888,
+            "support": 4.0
+          },
+          "squat": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 16.0
+          },
+          "deadlift": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1-score": 0.6666666666666666,
+            "support": 2.0
+          },
+          "bicep_curl": {
+            "precision": 0.5333333333333333,
+            "recall": 1.0,
+            "f1-score": 0.6956521739130435,
+            "support": 8.0
+          },
+          "pull_up": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 2.0
+          },
+          "row": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1-score": 0.6666666666666666,
+            "support": 4.0
+          },
+          "lunge": {
+            "precision": 0.125,
+            "recall": 0.4,
+            "f1-score": 0.19047619047619047,
+            "support": 5.0
+          },
+          "jumping_jack": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1-score": 0.6666666666666666,
+            "support": 2.0
+          },
+          "unknown": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 2.0
+          }
+        },
+        "confusion_labels": [
+          "bench_press",
+          "shoulder_press",
+          "push_up",
+          "squat",
+          "deadlift",
+          "bicep_curl",
+          "pull_up",
+          "row",
+          "lunge",
+          "jumping_jack",
+          "unknown"
+        ],
+        "confusion_matrix": [
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            5,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            14,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0
+          ]
+        ]
+      },
+      "abstained": {
+        "accuracy": 0.41818181818181815,
+        "macro_f1": 0.3619424054206663,
+        "per_class": {
+          "bench_press": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 1.0
+          },
+          "shoulder_press": {
+            "precision": 0.6,
+            "recall": 0.3333333333333333,
+            "f1-score": 0.42857142857142855,
+            "support": 9.0
+          },
+          "push_up": {
+            "precision": 0.8,
+            "recall": 1.0,
+            "f1-score": 0.8888888888888888,
+            "support": 4.0
+          },
+          "squat": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 16.0
+          },
+          "deadlift": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1-score": 0.6666666666666666,
+            "support": 2.0
+          },
+          "bicep_curl": {
+            "precision": 0.5333333333333333,
+            "recall": 1.0,
+            "f1-score": 0.6956521739130435,
+            "support": 8.0
+          },
+          "pull_up": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 2.0
+          },
+          "row": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1-score": 0.6666666666666666,
+            "support": 4.0
+          },
+          "lunge": {
+            "precision": 0.125,
+            "recall": 0.4,
+            "f1-score": 0.19047619047619047,
+            "support": 5.0
+          },
+          "jumping_jack": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 2.0
+          },
+          "unknown": {
+            "precision": 0.2857142857142857,
+            "recall": 1.0,
+            "f1-score": 0.4444444444444444,
+            "support": 2.0
+          }
+        },
+        "confusion_labels": [
+          "bench_press",
+          "shoulder_press",
+          "push_up",
+          "squat",
+          "deadlift",
+          "bicep_curl",
+          "pull_up",
+          "row",
+          "lunge",
+          "jumping_jack",
+          "unknown"
+        ],
+        "confusion_matrix": [
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            5,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            14,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            3
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2
+          ]
+        ]
+      }
+    },
+    "test": {
+      "windows": 74,
+      "groups": [
+        "hasyim_recording_613ca960e118f5cfe901",
+        "hasyim_recording_7d57ac60772a1279d886",
+        "hasyim_recording_8ca50f11361e5cfa8795",
+        "hasyim_recording_b3e2e118963f8cef1a5f",
+        "hasyim_recording_bb3d2a0291c1d875ba32",
+        "hasyim_recording_c06035ee317dbcf5f9b5",
+        "hasyim_recording_c86b1bd95930a4b440a3",
+        "hasyim_recording_cdfb32fa3bbb058eb49c",
+        "hasyim_recording_ebccb75da4b5fbc7ad6d",
+        "ucf_JumpingJack_g20",
+        "ucf_Lunges_g13",
+        "ucf_WalkingWithDog_g01",
+        "ucf_WalkingWithDog_g15"
+      ],
+      "group_count": 13,
+      "class_support": {
+        "bench_press": 13,
+        "shoulder_press": 7,
+        "push_up": 8,
+        "squat": 8,
+        "deadlift": 2,
+        "bicep_curl": 4,
+        "pull_up": 13,
+        "row": 7,
+        "lunge": 7,
+        "jumping_jack": 2,
+        "unknown": 3
+      },
+      "missing_classes": [],
+      "unknown_support": 3,
+      "raw": {
+        "accuracy": 0.5540540540540541,
+        "macro_f1": 0.4619629485988172,
+        "per_class": {
+          "bench_press": {
+            "precision": 0.75,
+            "recall": 0.9230769230769231,
+            "f1-score": 0.8275862068965517,
+            "support": 13.0
+          },
+          "shoulder_press": {
+            "precision": 0.08333333333333333,
+            "recall": 0.14285714285714285,
+            "f1-score": 0.10526315789473684,
+            "support": 7.0
+          },
+          "push_up": {
+            "precision": 0.7272727272727273,
+            "recall": 1.0,
+            "f1-score": 0.8421052631578947,
+            "support": 8.0
+          },
+          "squat": {
+            "precision": 0.8,
+            "recall": 1.0,
+            "f1-score": 0.8888888888888888,
+            "support": 8.0
+          },
+          "deadlift": {
+            "precision": 0.4,
+            "recall": 1.0,
+            "f1-score": 0.5714285714285714,
+            "support": 2.0
+          },
+          "bicep_curl": {
+            "precision": 0.5,
+            "recall": 0.25,
+            "f1-score": 0.3333333333333333,
+            "support": 4.0
+          },
+          "pull_up": {
+            "precision": 0.375,
+            "recall": 0.23076923076923078,
+            "f1-score": 0.2857142857142857,
+            "support": 13.0
+          },
+          "row": {
+            "precision": 1.0,
+            "recall": 0.5714285714285714,
+            "f1-score": 0.7272727272727273,
+            "support": 7.0
+          },
+          "lunge": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 7.0
+          },
+          "jumping_jack": {
+            "precision": 0.3333333333333333,
+            "recall": 1.0,
+            "f1-score": 0.5,
+            "support": 2.0
+          },
+          "unknown": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 3.0
+          }
+        },
+        "confusion_labels": [
+          "bench_press",
+          "shoulder_press",
+          "push_up",
+          "squat",
+          "deadlift",
+          "bicep_curl",
+          "pull_up",
+          "row",
+          "lunge",
+          "jumping_jack",
+          "unknown"
+        ],
+        "confusion_matrix": [
+          [
+            12,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            2,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            10,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            4,
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0
+          ]
+        ]
+      },
+      "abstained": {
+        "accuracy": 0.5540540540540541,
+        "macro_f1": 0.45877798895452754,
+        "per_class": {
+          "bench_press": {
+            "precision": 0.75,
+            "recall": 0.9230769230769231,
+            "f1-score": 0.8275862068965517,
+            "support": 13.0
+          },
+          "shoulder_press": {
+            "precision": 0.08333333333333333,
+            "recall": 0.14285714285714285,
+            "f1-score": 0.10526315789473684,
+            "support": 7.0
+          },
+          "push_up": {
+            "precision": 0.8,
+            "recall": 1.0,
+            "f1-score": 0.8888888888888888,
+            "support": 8.0
+          },
+          "squat": {
+            "precision": 0.8,
+            "recall": 1.0,
+            "f1-score": 0.8888888888888888,
+            "support": 8.0
+          },
+          "deadlift": {
+            "precision": 0.4,
+            "recall": 1.0,
+            "f1-score": 0.5714285714285714,
+            "support": 2.0
+          },
+          "bicep_curl": {
+            "precision": 0.5,
+            "recall": 0.25,
+            "f1-score": 0.3333333333333333,
+            "support": 4.0
+          },
+          "pull_up": {
+            "precision": 0.375,
+            "recall": 0.23076923076923078,
+            "f1-score": 0.2857142857142857,
+            "support": 13.0
+          },
+          "row": {
+            "precision": 1.0,
+            "recall": 0.42857142857142855,
+            "f1-score": 0.6,
+            "support": 7.0
+          },
+          "lunge": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 7.0
+          },
+          "jumping_jack": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 2.0
+          },
+          "unknown": {
+            "precision": 0.375,
+            "recall": 1.0,
+            "f1-score": 0.5454545454545454,
+            "support": 3.0
+          }
+        },
+        "confusion_labels": [
+          "bench_press",
+          "shoulder_press",
+          "push_up",
+          "squat",
+          "deadlift",
+          "bicep_curl",
+          "pull_up",
+          "row",
+          "lunge",
+          "jumping_jack",
+          "unknown"
+        ],
+        "confusion_matrix": [
+          [
+            12,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            2,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            10,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            3,
+            0,
+            0,
+            3,
+            0,
+            0,
+            1
+          ],
+          [
+            4,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3
+          ]
+        ]
+      }
+    }
+  },
+  "equipment_detection": "not_trained",
+  "production_ready": false
+}
